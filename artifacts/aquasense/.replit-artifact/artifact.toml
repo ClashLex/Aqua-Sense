@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AquaSense 2.0"
+version = "1.0.0"
+id = "artifacts/aquasense"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19432
+
+[services.development]
+run = "pnpm --filter @workspace/aquasense run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/aquasense", "run", "build" ]
+publicDir = "artifacts/aquasense/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19432"
+BASE_PATH = "/"
