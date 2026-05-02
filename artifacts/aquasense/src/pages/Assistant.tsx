@@ -1,6 +1,9 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Send, Bot, User, Trash2, Wifi, WifiOff, AlertTriangle } from "lucide-react";
+import {
+  Send, Bot, Trash2, WifiOff, AlertTriangle,
+  FlaskConical, Waves, Thermometer, Wind, Filter,
+} from "lucide-react";
 import { useSensorData, SENSORS, SensorName } from "../hooks/useSensorData";
 import { MetricType } from "../utils/thresholds";
 import {
@@ -8,25 +11,37 @@ import {
   getListAnthropicConversationsQueryKey,
 } from "@workspace/api-client-react";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ChatMessage,
-  getConvStore,
-  setConvStore,
-} from "../stores/conversationStore";
+import { ChatMessage, getConvStore, setConvStore } from "../stores/conversationStore";
+import { useTheme } from "../contexts/ThemeContext";
+
+// ── Constants ─────────────────────────────────────────────────────────────────
 
 const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const METRICS: MetricType[] = ["pH", "Turbidity", "Temperature", "DO", "TDS"];
-const METRIC_COLORS: Record<MetricType, string> = {
-  pH: "#2563eb", Turbidity: "#16a34a", Temperature: "#d97706", DO: "#7c3aed", TDS: "#0891b2",
+
+const METRIC_LABELS: Record<MetricType, string> = {
+  pH: "pH Level", Turbidity: "Turbidity", Temperature: "Temperature", DO: "Dissolved O₂", TDS: "TDS",
 };
+
+const METRIC_COLORS: Record<MetricType, string> = {
+  pH: "#2563eb", Turbidity: "#0d9488", Temperature: "#f59e0b", DO: "#f43f5e", TDS: "#7c3aed",
+};
+
+const METRIC_ICONS: Record<MetricType, React.ElementType> = {
+  pH: FlaskConical, Turbidity: Waves, Temperature: Thermometer, DO: Wind, TDS: Filter,
+};
+
+const METRIC_UNITS: Record<MetricType, string> = {
+  pH: "", Turbidity: " NTU", Temperature: "°C", DO: " mg/L", TDS: " ppm",
+};
+
 const STATUS_COLORS = { SAFE: "#16a34a", WARNING: "#d97706", DANGER: "#dc2626" } as const;
 
 const EMERGENCY_KEYWORDS = ["danger", "unsafe", "critical", "immediately", "emergency", "urgent", "hazardous", "contaminated"];
 
 function isEmergencyMsg(content: string): boolean {
-  const lower = content.toLowerCase();
-  return EMERGENCY_KEYWORDS.some((kw) => lower.includes(kw));
+  return EMERGENCY_KEYWORDS.some((kw) => content.toLowerCase().includes(kw));
 }
 
 const QUICK_PROMPTS = [
@@ -38,178 +53,260 @@ const QUICK_PROMPTS = [
   "What should I do right now?",
 ];
 
-// ── Live Readings Sidebar ──────────────────────────────────────────────────
+// ── Typing indicator ──────────────────────────────────────────────────────────
 
-interface SidebarProps {
+function TypingIndicator() {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      className="flex items-end gap-2"
+      data-testid="typing-indicator"
+    >
+      {/* Bot avatar */}
+      <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mb-0.5"
+        style={{ background: "#e0e7ff", border: "1px solid #c7d2fe" }}>
+        <Bot className="w-3.5 h-3.5 text-[#2563eb]" />
+      </div>
+      {/* Bubble */}
+      <div
+        className="px-4 py-3 rounded-[18px] rounded-bl-[4px] flex items-center gap-1.5"
+        style={{ background: "#f1f5f9" }}
+      >
+        {[0, 1, 2].map((i) => (
+          <motion.span
+            key={i}
+            className="block w-2 h-2 rounded-full"
+            style={{ background: "#94a3b8" }}
+            animate={{ y: [0, -5, 0] }}
+            transition={{ repeat: Infinity, duration: 0.85, delay: i * 0.18, ease: "easeInOut" }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Right panel — Live Readings ───────────────────────────────────────────────
+
+interface PanelProps {
   chatSensor: SensorName;
   onSensorChange: (s: SensorName) => void;
 }
 
-function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
+function LivePanel({ chatSensor, onSensorChange }: PanelProps) {
   const { currentReadings, anomalies, rainEvent, offlineSensor } = useSensorData();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const snap = currentReadings[chatSensor];
-  const activeAnomalies = anomalies.filter((a) => !a.resolved);
+  const active = anomalies.filter((a) => !a.resolved);
 
   return (
-    <aside className="hidden lg:flex flex-col gap-3 w-56 shrink-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
-
+    <aside
+      className="hidden lg:flex flex-col w-[38%] shrink-0 rounded-xl border overflow-hidden"
+      style={{
+        background:  "var(--app-surface)",
+        borderColor: "var(--app-border)",
+        boxShadow:   "0 1px 4px rgba(0,0,0,0.05)",
+      }}
+      data-testid="live-readings-panel"
+    >
+      {/* Header */}
       <div
-        className="rounded-xl border p-3 flex flex-col gap-3"
-        style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+        className="flex items-center justify-between px-5 py-4 shrink-0"
+        style={{ borderBottom: "1px solid var(--app-border)" }}
       >
-        <div className="flex items-center gap-2">
-          <motion.div
-            className="w-1.5 h-1.5 rounded-full bg-[#16a34a]"
-            animate={{ opacity: [1, 0.3, 1], scale: [1, 1.2, 1] }}
-            transition={{ repeat: Infinity, duration: 1.8 }}
+        <div className="flex items-center gap-2.5">
+          <motion.span
+            className="w-2 h-2 rounded-full bg-[#16a34a] shrink-0"
+            animate={{ opacity: [1, 0.4, 1], scale: [1, 1.15, 1] }}
+            transition={{ repeat: Infinity, duration: 2 }}
           />
-          <span className="text-[10px] font-medium tracking-wide" style={{ color: "var(--app-text-1)" }}>
+          <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
             Live Readings
           </span>
         </div>
+        <span className="text-[10px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}>
+          {chatSensor.split(" ").pop()}
+        </span>
+      </div>
 
-        <div className="flex flex-col gap-1">
-          <span className="text-[9px] font-medium tracking-wide uppercase mb-0.5" style={{ color: "var(--app-text-3)" }}>
-            AI Context Sensor
-          </span>
-          {SENSORS.map((s) => (
+      {/* Sensor selector */}
+      <div className="px-4 pt-3 pb-2 shrink-0 flex flex-col gap-1">
+        <p className="text-[9px] font-bold uppercase tracking-widest mb-1" style={{ color: "var(--app-text-3)" }}>
+          AI Context Sensor
+        </p>
+        {SENSORS.map((s) => {
+          const isActive = chatSensor === s;
+          const isOffline = s === offlineSensor;
+          return (
             <button
               key={s}
               onClick={() => onSensorChange(s)}
-              className="text-left px-2 py-1.5 rounded-lg text-[9px] font-medium tracking-wide truncate transition-all"
+              className="flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-medium transition-all text-left"
               style={{
-                background: chatSensor === s ? "var(--app-primary-tint)" : "transparent",
-                color: chatSensor === s ? "#2563eb" : "var(--app-text-2)",
-                border: `1px solid ${chatSensor === s ? "var(--app-primary-tint-border)" : "transparent"}`,
+                background:  isActive ? "rgba(37,99,235,0.08)" : "transparent",
+                color:       isActive ? "#2563eb" : "var(--app-text-2)",
+                border:      `1px solid ${isActive ? "rgba(37,99,235,0.18)" : "transparent"}`,
               }}
             >
-              {s === offlineSensor ? (
-                <span className="flex items-center gap-1">
-                  <WifiOff className="w-2.5 h-2.5 inline" /> {s}
-                </span>
-              ) : s}
+              {isOffline && <WifiOff className="w-3 h-3 shrink-0" />}
+              {s}
+              {isActive && (
+                <span className="ml-auto w-1.5 h-1.5 rounded-full bg-[#2563eb] shrink-0" />
+              )}
             </button>
-          ))}
-        </div>
+          );
+        })}
+      </div>
 
-        <div style={{ borderTop: "1px solid var(--app-border-subtle)" }} />
+      <div className="mx-4 shrink-0" style={{ height: 1, background: "var(--app-border-subtle)" }} />
 
-        <div className="flex flex-col gap-2">
-          {snap.offline ? (
-            <div className="text-center py-3">
-              <WifiOff className="w-5 h-5 mx-auto mb-1" style={{ color: "var(--app-text-3)" }} />
-              <span className="text-[9px] font-medium tracking-wide" style={{ color: "var(--app-text-3)" }}>Sensor Offline</span>
-            </div>
-          ) : (
-            METRICS.map((m) => {
-              const reading = snap[m];
-              const col = STATUS_COLORS[reading.status];
-              return (
-                <div key={m} className="flex items-center justify-between gap-1">
-                  <span className="text-[9px] font-medium tracking-wider shrink-0" style={{ color: METRIC_COLORS[m] }}>
-                    {m}
-                  </span>
-                  <div className="flex items-center gap-1 ml-auto">
-                    <span className="text-[10px] tabular-nums" style={{ color: col, fontFamily: "DM Mono, monospace" }}>
-                      {reading.value.toFixed(m === "TDS" ? 0 : 2)}{reading.unit}
-                    </span>
-                    <span
-                      className="text-[8px] font-medium px-1 py-0.5 rounded shrink-0"
-                      style={{ color: col, background: `${col}14`, border: `1px solid ${col}28` }}
-                    >
-                      {reading.status}
-                    </span>
-                  </div>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {rainEvent.active && (
-          <div
-            className="rounded-lg px-2 py-1.5 flex items-center gap-1.5 text-[9px] font-medium text-[#2563eb] tracking-wide"
-            style={{ background: "var(--app-primary-tint)", border: "1px solid var(--app-primary-tint-border)" }}
-          >
-            <span>🌧</span>
-            <span>Rain event active</span>
+      {/* Metric rows */}
+      <div className="flex-1 overflow-y-auto px-4 py-3 flex flex-col gap-0.5" style={{ scrollbarWidth: "thin" }}>
+        {snap.offline ? (
+          <div className="flex flex-col items-center justify-center py-10 gap-2">
+            <WifiOff className="w-7 h-7" style={{ color: "var(--app-text-3)" }} />
+            <p className="text-xs font-medium" style={{ color: "var(--app-text-3)" }}>Sensor Offline</p>
           </div>
+        ) : (
+          METRICS.map((m) => {
+            const reading   = snap[m];
+            const statColor = STATUS_COLORS[reading.status];
+            const mColor    = METRIC_COLORS[m];
+            const Icon      = METRIC_ICONS[m];
+            return (
+              <div
+                key={m}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl"
+                style={{ background: isDark ? "rgba(255,255,255,0.03)" : "#f8fafc", border: "1px solid var(--app-border-subtle)" }}
+              >
+                {/* Icon */}
+                <div
+                  className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                  style={{ background: `${mColor}12`, border: `1px solid ${mColor}22` }}
+                >
+                  <Icon className="w-3.5 h-3.5" style={{ color: mColor }} />
+                </div>
+
+                {/* Label */}
+                <div className="flex-1 min-w-0">
+                  <p className="text-[11px] font-semibold truncate" style={{ color: "var(--app-text-2)" }}>
+                    {METRIC_LABELS[m]}
+                  </p>
+                </div>
+
+                {/* Value + status dot */}
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className="text-sm font-bold tabular-nums"
+                    style={{ color: "var(--app-text-1)", fontFamily: "DM Mono, monospace" }}
+                  >
+                    {reading.value.toFixed(m === "TDS" ? 0 : 2)}
+                    <span className="text-[10px] font-normal" style={{ color: "var(--app-text-3)" }}>
+                      {METRIC_UNITS[m]}
+                    </span>
+                  </span>
+                  {/* Colored status dot */}
+                  <span
+                    className="w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ background: statColor }}
+                    title={reading.status}
+                  />
+                </div>
+              </div>
+            );
+          })
         )}
       </div>
 
-      {activeAnomalies.length > 0 && (
+      {/* Rain event */}
+      {rainEvent.active && (
         <div
-          className="rounded-xl border p-3 flex flex-col gap-2"
-          style={{ background: "var(--app-surface)", borderColor: "#fca5a5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+          className="mx-4 mb-2 px-3 py-2 rounded-lg flex items-center gap-2 shrink-0"
+          style={{ background: "rgba(37,99,235,0.08)", border: "1px solid rgba(37,99,235,0.18)" }}
         >
-          <div className="flex items-center gap-2">
-            <AlertTriangle className="w-3 h-3 text-[#dc2626]" />
-            <span className="text-[10px] font-semibold text-[#dc2626] tracking-wide">
-              {activeAnomalies.length} Active Alert{activeAnomalies.length !== 1 ? "s" : ""}
+          <span className="text-sm">🌧</span>
+          <span className="text-[11px] font-semibold text-[#2563eb]">Rain event active</span>
+        </div>
+      )}
+
+      {/* Active alerts summary */}
+      {active.length > 0 && (
+        <div
+          className="mx-4 mb-3 px-3 py-3 rounded-xl shrink-0"
+          style={{ background: "rgba(220,38,38,0.07)", border: "1px solid rgba(220,38,38,0.22)" }}
+        >
+          <div className="flex items-center gap-2 mb-2">
+            <AlertTriangle className="w-3.5 h-3.5 text-[#dc2626]" />
+            <span className="text-[11px] font-bold text-[#dc2626]">
+              {active.length} Active Alert{active.length !== 1 ? "s" : ""}
             </span>
           </div>
           <div className="flex flex-col gap-1.5">
-            {activeAnomalies.slice(0, 4).map((a) => {
-              const sc = STATUS_COLORS[a.severity === "CRITICAL" ? "DANGER" : "WARNING"];
-              return (
-                <div key={a.id} className="flex items-start gap-1.5">
-                  <div className="w-1 h-1 rounded-full mt-1.5 shrink-0" style={{ background: sc }} />
-                  <span className="text-[9px] font-medium leading-tight" style={{ color: "var(--app-text-2)" }}>
-                    {a.metric} {a.value.toFixed(2)} — {a.severity}
-                  </span>
-                </div>
-              );
-            })}
+            {active.slice(0, 3).map((a) => (
+              <div key={a.id} className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: a.severity === "CRITICAL" ? "#dc2626" : "#d97706" }} />
+                <span className="text-[10px] font-medium truncate" style={{ color: "var(--app-text-2)" }}>
+                  {a.metric}: {a.value.toFixed(2)}{METRIC_UNITS[a.metric]}
+                </span>
+                <span className="text-[9px] font-bold ml-auto shrink-0" style={{ color: a.severity === "CRITICAL" ? "#dc2626" : "#d97706" }}>
+                  {a.severity}
+                </span>
+              </div>
+            ))}
           </div>
         </div>
       )}
 
-      <div className="flex items-center gap-1.5 px-1">
-        <Wifi className="w-3 h-3 text-[#16a34a]" />
-        <span className="text-[9px] font-medium tracking-wide" style={{ color: "var(--app-text-3)" }}>All sensors connected</span>
+      {/* Footer */}
+      <div
+        className="px-5 py-3 shrink-0 flex items-center gap-2"
+        style={{ borderTop: "1px solid var(--app-border)" }}
+      >
+        <span className="w-1.5 h-1.5 rounded-full bg-[#16a34a] shrink-0" />
+        <span className="text-[10px]" style={{ color: "var(--app-text-3)" }}>
+          3 sensors · live feed
+        </span>
+        <span className="ml-auto text-[10px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono" }}>
+          5s interval
+        </span>
       </div>
     </aside>
   );
 }
 
-// ── Main Component ──────────────────────────────────────────────────────────
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export function Assistant() {
   const { currentReadings } = useSensorData();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
   const qc = useQueryClient();
   const createConv = useCreateAnthropicConversation();
 
-  const [messages, setMessages] = useState<ChatMessage[]>(() => getConvStore().messages);
-  const [convId, setConvId] = useState<number | null>(() => getConvStore().convId);
+  const [messages, setMessages]     = useState<ChatMessage[]>(() => getConvStore().messages);
+  const [convId, setConvId]         = useState<number | null>(() => getConvStore().convId);
   const [chatSensor, setChatSensor] = useState<SensorName>(() => getConvStore().chatSensor);
-
-  const [input, setInput] = useState("");
-  const [isTyping, setIsTyping] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [input, setInput]           = useState("");
+  const [isTyping, setIsTyping]     = useState(false);
+  const [error, setError]           = useState<string | null>(null);
 
   const bottomRef = useRef<HTMLDivElement>(null);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef  = useRef<HTMLInputElement>(null);
 
   useEffect(() => { setConvStore({ messages }); }, [messages]);
   useEffect(() => { setConvStore({ convId }); }, [convId]);
   useEffect(() => { setConvStore({ chatSensor }); }, [chatSensor]);
-
-  useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages, isTyping]);
+  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages, isTyping]);
 
   const getSystemPrompt = useCallback(() => {
     const snap = currentReadings[chatSensor];
-    const anomalyLines = snap.offline
+    const lines = snap.offline
       ? "  SENSOR OFFLINE — no live readings available"
       : METRICS.map((m) => `  - ${m}: ${snap[m].value.toFixed(m === "TDS" ? 0 : 2)}${snap[m].unit} (${snap[m].status})`).join("\n");
-
-    return `You are AquaSense AI, an expert water quality monitoring assistant with access to real-time sensor data.
-
-Current Readings — ${chatSensor}:
-${anomalyLines}
-
-Answer questions about water quality, explain sensor readings, suggest remediation steps when values are unsafe, and provide concise but expert guidance. If values are in DANGER range, clearly communicate the severity and immediate action required. Use accessible technical language.`;
+    return `You are AquaSense AI, an expert water quality monitoring assistant with access to real-time sensor data.\n\nCurrent Readings — ${chatSensor}:\n${lines}\n\nAnswer questions about water quality, explain sensor readings, suggest remediation steps when values are unsafe, and provide concise but expert guidance. If values are in DANGER range, clearly communicate the severity and immediate action required. Use accessible technical language.`;
   }, [currentReadings, chatSensor]);
 
   const ensureConversation = useCallback(async (): Promise<number> => {
@@ -232,28 +329,18 @@ Answer questions about water quality, explain sensor readings, suggest remediati
   const sendMessage = useCallback(async (text: string) => {
     if (!text.trim() || isTyping) return;
     setError(null);
-    const userMsg: ChatMessage = {
-      id: `u-${Date.now()}`,
-      role: "user",
-      content: text,
-      timestamp: new Date(),
-    };
+    const userMsg: ChatMessage = { id: `u-${Date.now()}`, role: "user", content: text, timestamp: new Date() };
     setMessages((prev) => [...prev, userMsg]);
     setInput("");
     setIsTyping(true);
 
     try {
       const id = await ensureConversation();
-
-      const response = await fetch(
-        `${BASE_URL}/api/anthropic/conversations/${id}/messages`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ content: text, systemPrompt: getSystemPrompt() }),
-        },
-      );
-
+      const response = await fetch(`${BASE_URL}/api/anthropic/conversations/${id}/messages`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ content: text, systemPrompt: getSystemPrompt() }),
+      });
       if (!response.ok) throw new Error(`HTTP ${response.status}`);
       if (!response.body) throw new Error("No response body");
 
@@ -262,16 +349,12 @@ Answer questions about water quality, explain sensor readings, suggest remediati
       let accumulated = "";
       const assistantId = `a-${Date.now()}`;
 
-      setMessages((prev) => [
-        ...prev,
-        { id: assistantId, role: "assistant", content: "", streaming: true, timestamp: new Date() },
-      ]);
+      setMessages((prev) => [...prev, { id: assistantId, role: "assistant", content: "", streaming: true, timestamp: new Date() }]);
 
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        const lines = decoder.decode(value, { stream: true }).split("\n");
-        for (const line of lines) {
+        for (const line of decoder.decode(value, { stream: true }).split("\n")) {
           if (!line.startsWith("data: ")) continue;
           try {
             const data = JSON.parse(line.slice(6));
@@ -286,9 +369,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
                 return updated;
               });
             }
-          } catch {
-            // skip malformed SSE lines
-          }
+          } catch { /* skip malformed SSE */ }
         }
       }
 
@@ -316,39 +397,50 @@ Answer questions about water quality, explain sensor readings, suggest remediati
 
   const msgCount = messages.filter((m) => !m.streaming).length;
 
+  // Bubble styles
+  const userBubbleBg   = "#2563eb";
+  const aiBubbleBg     = isDark ? "rgba(255,255,255,0.08)" : "#f1f5f9";
+  const aiBubbleColor  = isDark ? "#f1f5f9" : "#0f172a";
+
   return (
     <div
-      className="flex gap-4 overflow-hidden"
+      className="flex gap-5 overflow-hidden"
       style={{ height: "calc(100vh - 9.5rem)" }}
       data-testid="assistant-page"
     >
-      {/* ── Chat area ──────────────────────────────────────────────────── */}
-      <div className="flex-1 flex flex-col min-w-0">
-
-        {/* Header */}
-        <div className="flex items-center justify-between mb-3 shrink-0">
-          <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-[#2563eb]" />
-            <span
-              style={{ fontFamily: "var(--app-font-display)", color: "#2563eb" }}
-              className="text-sm font-bold"
-            >
-              AquaSense AI
-            </span>
-            <span className="text-[10px] hidden sm:block" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}>
-              claude-sonnet-4-5
-            </span>
+      {/* ── Left: Chat column ─────────────────────────────────────────────── */}
+      <div
+        className="flex-1 flex flex-col min-w-0 rounded-xl border overflow-hidden"
+        style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+      >
+        {/* Chat header */}
+        <div
+          className="flex items-center justify-between px-5 py-3.5 shrink-0"
+          style={{ borderBottom: "1px solid var(--app-border)" }}
+        >
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "#e0e7ff", border: "1px solid #c7d2fe" }}>
+              <Bot className="w-4 h-4 text-[#2563eb]" />
+            </div>
+            <div>
+              <p className="text-sm font-semibold" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+                AquaSense AI
+              </p>
+              <p className="text-[10px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}>
+                claude-sonnet-4-5 · {chatSensor}
+              </p>
+            </div>
           </div>
           <div className="flex items-center gap-2">
             {messages.length > 0 && (
-              <span className="text-[10px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}>
+              <span className="text-[10px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono" }}>
                 {msgCount} msg{msgCount !== 1 ? "s" : ""}
               </span>
             )}
             <button
               onClick={clearChat}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all"
-              style={{ color: "var(--app-text-2)", border: "1px solid var(--app-border)" }}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
+              style={{ color: "var(--app-text-2)", borderColor: "var(--app-border)" }}
               data-testid="clear-chat"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -359,126 +451,115 @@ Answer questions about water quality, explain sensor readings, suggest remediati
 
         {/* Messages */}
         <div
-          className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-0"
+          className="flex-1 overflow-y-auto min-h-0 px-5 py-5 space-y-4"
           style={{ scrollbarWidth: "thin", scrollbarColor: "var(--app-border) transparent" }}
           data-testid="chat-messages"
         >
+          {/* Empty state */}
           {messages.length === 0 && (
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center h-full text-center space-y-3 py-12"
+              className="flex flex-col items-center justify-center h-full text-center gap-4 pb-8"
             >
               <motion.div
-                animate={{ scale: [1, 1.06, 1] }}
-                transition={{ repeat: Infinity, duration: 3 }}
-                className="w-16 h-16 rounded-full flex items-center justify-center"
-                style={{ border: "1px solid var(--app-primary-tint-border)", background: "var(--app-primary-tint)" }}
+                animate={{ scale: [1, 1.05, 1] }}
+                transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                className="w-14 h-14 rounded-full flex items-center justify-center"
+                style={{ background: "#e0e7ff", border: "1px solid #c7d2fe" }}
               >
-                <Bot className="w-8 h-8 text-[#2563eb]" />
+                <Bot className="w-7 h-7 text-[#2563eb]" />
               </motion.div>
-              <p className="font-medium text-sm" style={{ color: "var(--app-text-1)" }}>
-                Ask me about your water quality
-              </p>
-              <p className="text-xs" style={{ color: "var(--app-text-2)" }}>
-                I have real-time access to {chatSensor} sensor readings
-              </p>
+              <div>
+                <p className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>
+                  Ask me about your water quality
+                </p>
+                <p className="text-xs mt-1" style={{ color: "var(--app-text-3)" }}>
+                  I have live access to {chatSensor} sensor data
+                </p>
+              </div>
             </motion.div>
           )}
 
           <AnimatePresence initial={false}>
             {messages.map((msg) => {
-              const emergency = msg.role === "assistant" && !msg.streaming && isEmergencyMsg(msg.content);
+              const isUser     = msg.role === "user";
+              const emergency  = !isUser && !msg.streaming && isEmergencyMsg(msg.content);
+
               return (
                 <motion.div
                   key={msg.id}
-                  initial={{ opacity: 0, y: 10 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex gap-3 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
+                  initial={{ opacity: 0, y: 8, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  transition={{ duration: 0.18, ease: "easeOut" }}
+                  className={`flex items-end gap-2.5 ${isUser ? "justify-end" : "justify-start"}`}
                   data-testid={`message-${msg.role}`}
                 >
-                  {msg.role === "assistant" && (
+                  {/* AI avatar — left side */}
+                  {!isUser && (
                     <div
-                      className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5"
+                      className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mb-0.5"
                       style={{
-                        background: emergency ? "#fef2f2" : "var(--app-primary-tint)",
-                        border: `1px solid ${emergency ? "#fca5a5" : "var(--app-primary-tint-border)"}`,
+                        background: emergency ? "rgba(220,38,38,0.12)" : "#e0e7ff",
+                        border: `1px solid ${emergency ? "rgba(220,38,38,0.30)" : "#c7d2fe"}`,
+                        flexShrink: 0,
                       }}
                     >
                       {emergency
-                        ? <AlertTriangle className="w-4 h-4 text-[#dc2626]" />
-                        : <Bot className="w-4 h-4 text-[#2563eb]" />}
+                        ? <AlertTriangle className="w-3.5 h-3.5 text-[#dc2626]" />
+                        : <Bot className="w-3.5 h-3.5 text-[#2563eb]" />}
                     </div>
                   )}
 
+                  {/* Bubble */}
                   <div
-                    className={`max-w-[82%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${emergency ? "animate-pulse-danger" : ""}`}
-                    style={
-                      msg.role === "user"
-                        ? { background: "var(--app-primary-tint)", border: "1px solid var(--app-primary-tint-border)", color: "var(--app-text-1)" }
-                        : emergency
-                        ? { background: "#fef2f2", border: "1px solid #fca5a5", color: "var(--app-text-1)" }
-                        : { background: "var(--app-surface)", border: "1px solid var(--app-border)", color: "var(--app-text-4)" }
-                    }
+                    className="max-w-[78%] px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap"
+                    style={{
+                      background:   isUser    ? userBubbleBg
+                                  : emergency ? "rgba(220,38,38,0.08)"
+                                  : aiBubbleBg,
+                      color:        isUser    ? "#ffffff"
+                                  : emergency ? "#b91c1c"
+                                  : aiBubbleColor,
+                      borderRadius: isUser ? "18px 18px 4px 18px" : "18px 18px 18px 4px",
+                      border: isUser ? "none"
+                            : emergency ? "1px solid rgba(220,38,38,0.22)"
+                            : `1px solid ${isDark ? "rgba(255,255,255,0.08)" : "#e2e8f0"}`,
+                    }}
                   >
                     {emergency && (
-                      <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-red-200">
-                        <AlertTriangle className="w-3 h-3 text-[#dc2626]" />
-                        <span className="text-[9px] font-bold tracking-widest text-[#dc2626]">EMERGENCY ALERT</span>
+                      <div className="flex items-center gap-1.5 mb-2 pb-2" style={{ borderBottom: "1px solid rgba(220,38,38,0.18)" }}>
+                        <AlertTriangle className="w-3 h-3" />
+                        <span className="text-[9px] font-bold tracking-widest">EMERGENCY ALERT</span>
                       </div>
                     )}
                     {msg.content}
                     {msg.streaming && (
                       <motion.span
-                        className="inline-block w-2 h-4 ml-1 bg-[#2563eb] rounded-sm"
+                        className="inline-block w-2 h-[14px] ml-1 rounded-sm align-text-bottom"
+                        style={{ background: isUser ? "rgba(255,255,255,0.7)" : "#2563eb" }}
                         animate={{ opacity: [1, 0] }}
-                        transition={{ repeat: Infinity, duration: 0.8 }}
+                        transition={{ repeat: Infinity, duration: 0.75 }}
                       />
                     )}
                   </div>
-
-                  {msg.role === "user" && (
-                    <div
-                      className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5"
-                      style={{ background: "var(--app-primary-tint)", border: "1px solid var(--app-primary-tint-border)" }}
-                    >
-                      <User className="w-4 h-4 text-[#2563eb]" />
-                    </div>
-                  )}
                 </motion.div>
               );
             })}
           </AnimatePresence>
 
-          {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-              <div
-                className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center"
-                style={{ background: "var(--app-primary-tint)", border: "1px solid var(--app-primary-tint-border)" }}
-              >
-                <Bot className="w-4 h-4 text-[#2563eb]" />
-              </div>
-              <div
-                className="rounded-xl px-4 py-3 flex items-center gap-1.5"
-                style={{ background: "var(--app-surface)", border: "1px solid var(--app-border)" }}
-                data-testid="typing-indicator"
-              >
-                {[0, 1, 2].map((i) => (
-                  <motion.div
-                    key={i}
-                    className="w-2 h-2 rounded-full bg-[#2563eb]"
-                    animate={{ y: [0, -6, 0] }}
-                    transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.2 }}
-                  />
-                ))}
-              </div>
-            </motion.div>
-          )}
+          {/* Typing indicator */}
+          <AnimatePresence>
+            {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
+              <TypingIndicator key="typing" />
+            )}
+          </AnimatePresence>
 
+          {/* Error */}
           {error && (
             <div
-              className="text-[#dc2626] text-xs px-4 py-2 rounded-lg border bg-[#fef2f2]"
-              style={{ borderColor: "#fca5a5" }}
+              className="text-xs px-4 py-2.5 rounded-xl border"
+              style={{ background: "rgba(220,38,38,0.07)", borderColor: "rgba(220,38,38,0.22)", color: "#dc2626" }}
               data-testid="chat-error"
             >
               Error: {error}
@@ -488,25 +569,25 @@ Answer questions about water quality, explain sensor readings, suggest remediati
           <div ref={bottomRef} />
         </div>
 
-        {/* Quick prompts */}
-        <div className="shrink-0 flex flex-wrap gap-2 py-2.5" data-testid="quick-prompts">
+        {/* Quick prompts — above input */}
+        <div
+          className="shrink-0 px-5 pt-3 pb-2 flex flex-wrap gap-2"
+          style={{ borderTop: "1px solid var(--app-border)" }}
+          data-testid="quick-prompts"
+        >
           {QUICK_PROMPTS.map((prompt) => (
             <button
               key={prompt}
               onClick={() => sendMessage(prompt)}
               disabled={isTyping}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-all disabled:opacity-40"
-              style={{ border: "1px solid var(--app-border)", color: "var(--app-text-2)" }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "var(--app-primary-tint)";
-                (e.currentTarget as HTMLElement).style.color = "#2563eb";
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--app-primary-tint-border)";
+              className="px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all disabled:opacity-40"
+              style={{
+                background:  "rgba(37,99,235,0.08)",
+                color:       "#2563eb",
+                border:      "1px solid rgba(37,99,235,0.18)",
               }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.background = "";
-                (e.currentTarget as HTMLElement).style.color = "var(--app-text-2)";
-                (e.currentTarget as HTMLElement).style.borderColor = "var(--app-border)";
-              }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(37,99,235,0.15)"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(37,99,235,0.08)"; }}
               data-testid={`quick-prompt-${prompt.slice(0, 20).replace(/\s+/g, "-").toLowerCase()}`}
             >
               {prompt}
@@ -514,41 +595,53 @@ Answer questions about water quality, explain sensor readings, suggest remediati
           ))}
         </div>
 
-        {/* Input */}
+        {/* Input bar — sticky at bottom */}
         <div
-          className="shrink-0 flex gap-2 items-center rounded-xl border p-2"
-          style={{ background: "var(--app-surface)", borderColor: "var(--app-border)" }}
+          className="shrink-0 px-4 py-3 flex items-center gap-3"
+          style={{ borderTop: "1px solid var(--app-border)" }}
         >
           <input
             ref={inputRef}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage(input)}
-            placeholder="Ask about water quality..."
+            placeholder="Ask about water quality…"
             disabled={isTyping}
-            className="flex-1 bg-transparent text-sm outline-none px-2 disabled:opacity-50"
-            style={{ color: "var(--app-text-1)" }}
+            className="flex-1 text-sm outline-none px-4 py-2.5 rounded-full disabled:opacity-50"
+            style={{
+              background:   isDark ? "rgba(255,255,255,0.06)" : "#f8fafc",
+              border:       `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#e2e8f0"}`,
+              color:        "var(--app-text-1)",
+              fontFamily:   "var(--app-font-sans)",
+            }}
             data-testid="chat-input"
           />
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || isTyping}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
+            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all disabled:opacity-35"
+            style={{ background: "#2563eb" }}
+            onMouseEnter={(e) => { if (!e.currentTarget.disabled) (e.currentTarget as HTMLButtonElement).style.background = "#1d4ed8"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#2563eb"; }}
             data-testid="send-button"
           >
-            <Send className="w-4 h-4" />
+            <Send className="w-4 h-4 text-white" />
           </button>
         </div>
 
-        <div className="shrink-0 flex items-center justify-between mt-1.5 px-1">
-          <span className="text-[9px] tracking-wide" style={{ color: "var(--app-text-3)" }}>Powered by Claude · Anthropic</span>
-          <span className="text-[9px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}>
-            {msgCount} msg{msgCount !== 1 ? "s" : ""}
+        {/* Footer */}
+        <div className="shrink-0 px-5 pb-3 flex items-center justify-between">
+          <span className="text-[9px] tracking-wide" style={{ color: "var(--app-text-3)" }}>
+            Powered by Claude · Anthropic
+          </span>
+          <span className="text-[9px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono" }}>
+            End-to-end encrypted
           </span>
         </div>
       </div>
 
-      <LiveReadingsSidebar chatSensor={chatSensor} onSensorChange={setChatSensor} />
+      {/* ── Right: Live panel ─────────────────────────────────────────────── */}
+      <LivePanel chatSensor={chatSensor} onSensorChange={setChatSensor} />
     </div>
   );
 }
