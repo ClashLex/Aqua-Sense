@@ -24,7 +24,6 @@ export function TopBar({ title, lastUpdated, isLive, alertCount }: TopBarProps) 
       style={{ background: "var(--app-surface)", borderBottom: "1px solid var(--app-border)" }}
       data-testid="top-bar"
     >
-      {/* Page title */}
       <h1
         className="text-xl font-bold leading-none"
         style={{ fontFamily: "var(--app-font-display)", color: "var(--app-text-1)" }}
@@ -33,9 +32,7 @@ export function TopBar({ title, lastUpdated, isLive, alertCount }: TopBarProps) 
         {title}
       </h1>
 
-      {/* Right side */}
       <div className="flex items-center gap-3 sm:gap-4">
-        {/* Alert bell */}
         {alertCount > 0 && (
           <motion.div initial={{ scale: 0.8 }} animate={{ scale: 1 }} className="relative">
             <Bell className="w-4 h-4" style={{ color: "var(--app-text-2)" }} />
@@ -45,7 +42,6 @@ export function TopBar({ title, lastUpdated, isLive, alertCount }: TopBarProps) 
           </motion.div>
         )}
 
-        {/* Last updated */}
         <span
           className="hidden sm:block text-xs tabular-nums"
           style={{ fontFamily: "var(--app-font-mono)", color: "var(--app-text-3)" }}
@@ -69,18 +65,22 @@ export function TopBar({ title, lastUpdated, isLive, alertCount }: TopBarProps) 
             transition={{ duration: 0.18 }}
           >
             {theme === "dark"
-              ? <Sun className="w-3.5 h-3.5 text-[#d97706]" />
+              ? <Sun  className="w-3.5 h-3.5 text-[#d97706]" />
               : <Moon className="w-3.5 h-3.5" style={{ color: "var(--app-text-2)" }} />
             }
           </motion.div>
         </button>
 
-        {/* Live badge */}
+        {/* Live badge — rgba backgrounds work in both themes */}
         <div
           className="flex items-center gap-1.5 px-2.5 py-1 rounded-full"
           style={{
-            background: isLive ? "#f0fdf4" : "#fef2f2",
-            border: `1px solid ${isLive ? "#bbf7d0" : "#fca5a5"}`,
+            background: isLive
+              ? "rgba(22, 163, 74, 0.10)"
+              : "rgba(220, 38, 38, 0.10)",
+            border: `1px solid ${isLive
+              ? "rgba(22, 163, 74, 0.28)"
+              : "rgba(220, 38, 38, 0.28)"}`,
           }}
           data-testid="live-badge"
         >

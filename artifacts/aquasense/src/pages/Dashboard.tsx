@@ -58,8 +58,11 @@ export function Dashboard() {
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="rounded-xl border px-4 py-3 flex items-center gap-3 flex-wrap bg-[#fef2f2]"
-                style={{ borderColor: "#fca5a5" }}
+                className="rounded-xl border px-4 py-3 flex items-center gap-3 flex-wrap"
+                style={{
+                  background:  "rgba(220, 38, 38, 0.08)",
+                  borderColor: "rgba(220, 38, 38, 0.30)",
+                }}
                 data-testid="crisis-banner"
               >
                 <motion.div
@@ -154,7 +157,7 @@ export function Dashboard() {
       </div>
 
       {/* Metric cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
         {METRICS.map((metric, i) => (
           <MetricCard
             key={metric}
@@ -163,7 +166,6 @@ export function Dashboard() {
             value={snap[metric].value}
             unit={snap[metric].unit}
             status={snap[metric].status}
-            history={hist[metric].slice(-10)}
             index={i}
             offline={isDisplayOffline}
           />

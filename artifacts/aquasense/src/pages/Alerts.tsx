@@ -10,10 +10,10 @@ const METRIC_UNITS: Record<MetricType, string> = {
 };
 
 const SEV_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  CRITICAL: { text: "#dc2626", bg: "#fef2f2", border: "#fca5a5" },
-  HIGH:     { text: "#ea580c", bg: "#fff7ed", border: "#fed7aa" },
-  MEDIUM:   { text: "#d97706", bg: "#fffbeb", border: "#fde68a" },
-  LOW:      { text: "#16a34a", bg: "#f0fdf4", border: "#bbf7d0" },
+  CRITICAL: { text: "#dc2626", bg: "rgba(220, 38, 38, 0.09)",  border: "rgba(220, 38, 38, 0.28)" },
+  HIGH:     { text: "#ea580c", bg: "rgba(234, 88, 12, 0.09)",  border: "rgba(234, 88, 12, 0.28)" },
+  MEDIUM:   { text: "#d97706", bg: "rgba(217, 119, 6, 0.09)",  border: "rgba(217, 119, 6, 0.28)" },
+  LOW:      { text: "#16a34a", bg: "rgba(22, 163, 74, 0.09)",  border: "rgba(22, 163, 74, 0.28)" },
 };
 
 export function Alerts() {
@@ -56,7 +56,11 @@ export function Alerts() {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="rounded-xl border border-[#bbf7d0] bg-[#f0fdf4] p-8 text-center"
+              className="rounded-xl border p-8 text-center"
+              style={{
+                background:  "rgba(22, 163, 74, 0.07)",
+                borderColor: "rgba(22, 163, 74, 0.25)",
+              }}
             >
               <Shield className="w-8 h-8 text-[#16a34a] mx-auto mb-2" />
               <p className="text-[#16a34a] font-semibold text-sm">All Systems Nominal</p>
