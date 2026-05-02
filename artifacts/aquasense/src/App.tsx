@@ -17,7 +17,10 @@ function AppShell() {
   const activeAlerts = anomalies.filter((a) => !a.resolved).length;
 
   return (
-    <div className="min-h-screen bg-[#020817]">
+    <div className="min-h-screen bg-[#020817]" style={{
+      backgroundImage: "linear-gradient(rgba(0,245,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.025) 1px, transparent 1px)",
+      backgroundSize: "52px 52px",
+    }}>
       <Navbar isLive={true} lastUpdated={lastUpdated} alertCount={activeAlerts} />
       <main className="pt-14 pb-20 md:pb-8 px-4 md:px-6 max-w-[1600px] mx-auto py-6">
         <Switch>

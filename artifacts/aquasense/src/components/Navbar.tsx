@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { motion, AnimatePresence } from "framer-motion";
 import { LayoutDashboard, BarChart2, Bell, Bot, Menu, X, Droplets } from "lucide-react";
@@ -16,11 +16,22 @@ interface NavbarProps {
   alertCount: number;
 }
 
-export function Navbar({ isLive, lastUpdated, alertCount }: NavbarProps) {
+export function Navbar({ isLive, alertCount }: NavbarProps) {
   const [location] = useLocation();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  const timeStr = lastUpdated.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit" });
+  // Live ticker — updates every second independently of data refreshes
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const id = setInterval(() => setNow(new Date()), 1000);
+    return () => clearInterval(id);
+  }, []);
+
+  const timeStr = now.toLocaleTimeString([], {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
 
   return (
     <>
@@ -79,7 +90,11 @@ export function Navbar({ isLive, lastUpdated, alertCount }: NavbarProps) {
               </>
             )}
           </div>
-          <span className="hidden sm:block text-[#64748b] text-xs font-mono" data-testid="last-updated">
+          {/* Live ticking clock */}
+          <span
+            className="hidden sm:block text-[#64748b] text-xs font-mono tabular-nums"
+            data-testid="live-clock"
+          >
             {timeStr}
           </span>
           <button
