@@ -53,12 +53,10 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
   return (
     <aside className="hidden lg:flex flex-col gap-3 w-56 shrink-0 overflow-y-auto" style={{ scrollbarWidth: "none" }}>
 
-      {/* Live readings panel */}
       <div
         className="rounded-xl border bg-white p-3 flex flex-col gap-3"
         style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
       >
-        {/* Header */}
         <div className="flex items-center gap-2">
           <motion.div
             className="w-1.5 h-1.5 rounded-full bg-[#16a34a]"
@@ -70,7 +68,6 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
           </span>
         </div>
 
-        {/* Sensor selector */}
         <div className="flex flex-col gap-1">
           <span className="text-[9px] font-medium text-[#94a3b8] tracking-wide uppercase mb-0.5">
             AI Context Sensor
@@ -97,7 +94,6 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
 
         <div className="border-t border-[#f1f5f9]" />
 
-        {/* Metric rows */}
         <div className="flex flex-col gap-2">
           {snap.offline ? (
             <div className="text-center py-3">
@@ -130,7 +126,6 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
           )}
         </div>
 
-        {/* Rain event indicator */}
         {rainEvent.active && (
           <div
             className="rounded-lg px-2 py-1.5 flex items-center gap-1.5 text-[9px] font-medium text-blue-600 tracking-wide"
@@ -142,7 +137,6 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
         )}
       </div>
 
-      {/* Active anomalies panel */}
       {activeAnomalies.length > 0 && (
         <div
           className="rounded-xl border bg-white p-3 flex flex-col gap-2"
@@ -170,7 +164,6 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
         </div>
       )}
 
-      {/* Connection status */}
       <div className="flex items-center gap-1.5 px-1">
         <Wifi className="w-3 h-3 text-[#16a34a]" />
         <span className="text-[9px] font-medium text-[#94a3b8] tracking-wide">All sensors connected</span>
@@ -326,7 +319,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
   return (
     <div
       className="flex gap-4 overflow-hidden"
-      style={{ height: "calc(100vh - 8rem)" }}
+      style={{ height: "calc(100vh - 9.5rem)" }}
       data-testid="assistant-page"
     >
       {/* ── Chat area ──────────────────────────────────────────────────── */}
@@ -420,31 +413,16 @@ Answer questions about water quality, explain sensor readings, suggest remediati
                     className={`max-w-[82%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${emergency ? "animate-pulse-danger" : ""}`}
                     style={
                       msg.role === "user"
-                        ? {
-                            background: "#eff6ff",
-                            border: "1px solid #bfdbfe",
-                            color: "#0f172a",
-                            fontFamily: "Inter, sans-serif",
-                          }
+                        ? { background: "#eff6ff", border: "1px solid #bfdbfe", color: "#0f172a" }
                         : emergency
-                        ? {
-                            background: "#fef2f2",
-                            border: "1px solid #fca5a5",
-                            color: "#0f172a",
-                          }
-                        : {
-                            background: "#ffffff",
-                            border: "1px solid #e2e8f0",
-                            color: "#374151",
-                          }
+                        ? { background: "#fef2f2", border: "1px solid #fca5a5", color: "#0f172a" }
+                        : { background: "#ffffff", border: "1px solid #e2e8f0", color: "#374151" }
                     }
                   >
                     {emergency && (
                       <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-red-200">
                         <AlertTriangle className="w-3 h-3 text-[#dc2626]" />
-                        <span className="text-[9px] font-bold tracking-widest text-[#dc2626]">
-                          EMERGENCY ALERT
-                        </span>
+                        <span className="text-[9px] font-bold tracking-widest text-[#dc2626]">EMERGENCY ALERT</span>
                       </div>
                     )}
                     {msg.content}
@@ -458,9 +436,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
                   </div>
 
                   {msg.role === "user" && (
-                    <div
-                      className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5 bg-[#eff6ff] border border-[#bfdbfe]"
-                    >
+                    <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5 bg-[#eff6ff] border border-[#bfdbfe]">
                       <User className="w-4 h-4 text-[#2563eb]" />
                     </div>
                   )}
@@ -469,16 +445,12 @@ Answer questions about water quality, explain sensor readings, suggest remediati
             })}
           </AnimatePresence>
 
-          {/* Typing indicator */}
           {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
               <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center bg-[#eff6ff] border border-[#bfdbfe]">
                 <Bot className="w-4 h-4 text-[#2563eb]" />
               </div>
-              <div
-                className="rounded-xl px-4 py-3 flex items-center gap-1.5 bg-white border border-[#e2e8f0]"
-                data-testid="typing-indicator"
-              >
+              <div className="rounded-xl px-4 py-3 flex items-center gap-1.5 bg-white border border-[#e2e8f0]" data-testid="typing-indicator">
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
@@ -492,10 +464,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
           )}
 
           {error && (
-            <div
-              className="text-[#dc2626] text-xs px-4 py-2 rounded-lg border border-[#fca5a5] bg-[#fef2f2]"
-              data-testid="chat-error"
-            >
+            <div className="text-[#dc2626] text-xs px-4 py-2 rounded-lg border border-[#fca5a5] bg-[#fef2f2]" data-testid="chat-error">
               Error: {error}
             </div>
           )}
@@ -519,10 +488,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
         </div>
 
         {/* Input */}
-        <div
-          className="shrink-0 flex gap-2 items-center rounded-xl border p-2 bg-white"
-          style={{ borderColor: "#e2e8f0" }}
-        >
+        <div className="shrink-0 flex gap-2 items-center rounded-xl border p-2 bg-white" style={{ borderColor: "#e2e8f0" }}>
           <input
             ref={inputRef}
             value={input}
@@ -543,11 +509,8 @@ Answer questions about water quality, explain sensor readings, suggest remediati
           </button>
         </div>
 
-        {/* Powered by Claude badge */}
         <div className="shrink-0 flex items-center justify-between mt-1.5 px-1">
-          <span className="text-[#94a3b8] text-[9px] tracking-wide">
-            Powered by Claude · Anthropic
-          </span>
+          <span className="text-[#94a3b8] text-[9px] tracking-wide">Powered by Claude · Anthropic</span>
           <span className="text-[#94a3b8] text-[9px]" style={{ fontFamily: "DM Mono, monospace" }}>
             {msgCount} msg{msgCount !== 1 ? "s" : ""}
           </span>
