@@ -29,7 +29,8 @@ function AppShell() {
   const [location] = useLocation();
 
   const pageTitle = getPageTitle(location);
-  const isLive = true;
+  // isLive: true while the data pipeline is actively updating (within last 30 s).
+  const isLive = Date.now() - lastUpdated.getTime() < 30_000;
 
   return (
     <div className="min-h-screen bg-[#f8fafc]">

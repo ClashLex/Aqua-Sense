@@ -15,11 +15,6 @@ interface SidebarProps {
   lastUpdated: Date;
 }
 
-function useNow() {
-  const [now, setNow] = import.meta.hot ? [new Date(), () => {}] : [new Date(), () => {}];
-  return now;
-}
-
 export function Sidebar({ alertCount, isLive, lastUpdated }: SidebarProps) {
   const [location] = useLocation();
 

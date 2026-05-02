@@ -58,10 +58,9 @@ export function CopilotChat() {
   }, [messages, isTyping, isOpen]);
 
   useEffect(() => {
-    if (isOpen) {
-      const t = setTimeout(() => inputRef.current?.focus(), 120);
-      return () => clearTimeout(t);
-    }
+    if (!isOpen) return;
+    const t = setTimeout(() => inputRef.current?.focus(), 120);
+    return () => clearTimeout(t);
   }, [isOpen]);
 
   if (location === "/assistant" || location.startsWith("/assistant")) return null;

@@ -155,7 +155,7 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
         })}
       </svg>
 
-      <span className="text-[#94a3b8] text-[9px] font-medium tracking-wide text-center leading-tight mt-0.5 px-1 truncate w-full text-center">
+      <span className="text-[#94a3b8] text-[9px] font-medium tracking-wide text-center leading-tight mt-0.5 px-1 truncate w-full">
         {sensorName}
       </span>
     </div>

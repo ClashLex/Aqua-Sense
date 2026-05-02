@@ -7,7 +7,7 @@ import {
 } from "recharts";
 import { ClipboardCopy, Check, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
 import { useSensorData, SENSORS, SensorName } from "../hooks/useSensorData";
-import { MetricType, StatusType, getStatus } from "../utils/thresholds";
+import { MetricType, StatusType } from "../utils/thresholds";
 import { predictNext } from "../utils/linearRegression";
 
 // ── Constants ──────────────────────────────────────────────────────────────
