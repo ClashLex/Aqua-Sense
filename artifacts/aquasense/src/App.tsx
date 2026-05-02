@@ -10,6 +10,7 @@ import { Alerts } from "./pages/Alerts";
 import { Assistant } from "./pages/Assistant";
 import NotFound from "@/pages/not-found";
 import { useSensorData, SensorDataProvider } from "./hooks/useSensorData";
+import { CopilotChat } from "./components/CopilotChat";
 
 const queryClient = new QueryClient();
 
@@ -46,6 +47,7 @@ function AppShell() {
           </Switch>
         </motion.main>
       </AnimatePresence>
+      <CopilotChat />
     </div>
   );
 }
