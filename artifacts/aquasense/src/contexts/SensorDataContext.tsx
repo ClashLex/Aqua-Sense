@@ -43,6 +43,8 @@ export interface SensorDataContextValue {
   offlineSensor: SensorName | null;
   acknowledgeAnomaly: (id: string) => void;
   setSelectedSensor: (sensor: SensorName | null) => void;
+  crisisEndTime: number | null;
+  triggerCrisis: () => void;
 }
 
 // ─── Constants ───────────────────────────────────────────────────────────────
@@ -321,8 +323,9 @@ export const SensorDataContext = createContext<SensorDataContextValue | null>(nu
 export function SensorDataProvider({ children }: { children: React.ReactNode }) {
   const physRef = useRef<PhysicsState>(initPhysics());
   const historyRef = useRef<Record<SensorName, MetricHistory>>(initHistory());
+  const crisisEndTimeRef = useRef<number | null>(null);
 
-  const [state, setState] = useState<Omit<SensorDataContextValue, "acknowledgeAnomaly" | "setSelectedSensor">>(() => {
+  const [state, setState] = useState<Omit<SensorDataContextValue, "acknowledgeAnomaly" | "setSelectedSensor" | "triggerCrisis">>(() => {
     const p = physRef.current;
     const h = historyRef.current;
     const readings: Partial<Record<SensorName, SensorSnapshot>> = {};
@@ -337,10 +340,17 @@ export function SensorDataProvider({ children }: { children: React.ReactNode }) 
       selectedSensor: null,
       rainEvent: { active: false, intensity: 0 },
       offlineSensor: null,
+      crisisEndTime: null,
     };
   });
 
   const tick = useCallback(() => {
+    // Auto-clear expired crisis
+    if (crisisEndTimeRef.current !== null && Date.now() >= crisisEndTimeRef.current) {
+      crisisEndTimeRef.current = null;
+    }
+    const crisisActive = crisisEndTimeRef.current !== null;
+
     const phys = physRef.current;
     const h = historyRef.current;
 
@@ -350,6 +360,19 @@ export function SensorDataProvider({ children }: { children: React.ReactNode }) 
 
     // 2. Update each sensor's physics
     for (const s of SENSORS) updateSensorPhysics(phys, s);
+
+    // 2b. Crisis override — slam all online sensors to DANGER values
+    if (crisisActive) {
+      for (const s of SENSORS) {
+        if (phys.offline.sensor === s) continue;
+        const v = phys.values[s];
+        v.pH = 5.0 + (Math.random() - 0.5) * 0.5;
+        v.Turbidity = 15 + Math.random() * 5;
+        v.Temperature = 37 + Math.random() * 1.5;
+        v.DO = 3.0 + Math.random() * 0.7;
+        v.TDS = 1100 + Math.random() * 250;
+      }
+    }
 
     // 3. Push to history
     for (const s of SENSORS) {
@@ -392,6 +415,7 @@ export function SensorDataProvider({ children }: { children: React.ReactNode }) 
           intensity: phys.rain.bonus,
         },
         offlineSensor: phys.offline.sensor,
+        crisisEndTime: crisisEndTimeRef.current,
       };
     });
   }, []);
@@ -412,8 +436,13 @@ export function SensorDataProvider({ children }: { children: React.ReactNode }) 
     setState((prev) => ({ ...prev, selectedSensor: sensor }));
   }, []);
 
+  const triggerCrisis = useCallback(() => {
+    crisisEndTimeRef.current = Date.now() + 30000;
+    setState((prev) => ({ ...prev, crisisEndTime: crisisEndTimeRef.current }));
+  }, []);
+
   return (
-    <SensorDataContext.Provider value={{ ...state, acknowledgeAnomaly, setSelectedSensor }}>
+    <SensorDataContext.Provider value={{ ...state, acknowledgeAnomaly, setSelectedSensor, triggerCrisis }}>
       {children}
     </SensorDataContext.Provider>
   );

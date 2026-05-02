@@ -1,5 +1,6 @@
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Droplets } from "lucide-react";
+import { Droplets, AlertTriangle, Zap } from "lucide-react";
 import { MetricCard } from "../components/MetricCard";
 import { RealTimeChart } from "../components/RealTimeChart";
 import { AnomalyBanner } from "../components/AnomalyBanner";
@@ -32,6 +33,8 @@ export function Dashboard() {
     setSelectedSensor,
     rainEvent,
     offlineSensor,
+    crisisEndTime,
+    triggerCrisis,
   } = useSensorData();
 
   const displaySensor: SensorName = selectedSensor ?? SENSORS[0];
@@ -40,14 +43,60 @@ export function Dashboard() {
   const isDisplayOffline = snap.offline;
   const score = calcScore(snap);
 
+  // 1-second countdown for crisis timer
+  const [nowMs, setNowMs] = useState(Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const crisisSecsLeft = crisisEndTime ? Math.max(0, Math.ceil((crisisEndTime - nowMs) / 1000)) : 0;
+  const isCrisis = crisisSecsLeft > 0;
+
   return (
     <div className="space-y-4" data-testid="dashboard-page">
 
-      {/* ── Top row: banners (left) + WQS gauge (right) ─────────────────── */}
+      {/* ── Top row: banners (left) + WQS gauge + crisis button (right) ── */}
       <div className="flex flex-col sm:flex-row gap-3 items-start">
 
         {/* Left: event + anomaly banners */}
-        <div className="flex-1 min-w-0 space-y-3">
+        <div className="flex-1 min-w-0 space-y-3 w-full">
+          <AnimatePresence>
+            {/* Crisis active banner */}
+            {isCrisis && (
+              <motion.div
+                key="crisis-banner"
+                initial={{ opacity: 0, y: -14, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -8 }}
+                className="rounded-xl border px-4 py-3 flex items-center gap-3 flex-wrap"
+                style={{
+                  background: "linear-gradient(135deg, rgba(255,45,85,0.15) 0%, #0d1f3c 100%)",
+                  borderColor: "rgba(255,45,85,0.5)",
+                  boxShadow: "0 0 24px rgba(255,45,85,0.12)",
+                }}
+                data-testid="crisis-banner"
+              >
+                <motion.div
+                  animate={{ opacity: [1, 0.3, 1], scale: [1, 1.4, 1] }}
+                  transition={{ repeat: Infinity, duration: 0.7 }}
+                  className="w-2 h-2 rounded-full bg-[#ff2d55] shrink-0"
+                />
+                <span className="text-[#ff2d55] text-xs font-mono font-bold tracking-widest">
+                  CRISIS SIMULATION ACTIVE
+                </span>
+                <span className="text-[#ff6b35] text-xs font-mono hidden sm:block">
+                  All metrics forced to DANGER range
+                </span>
+                <span
+                  className="ml-auto text-xs font-mono tabular-nums font-bold"
+                  style={{ color: "#ff2d55", fontFamily: "var(--app-font-display)" }}
+                >
+                  {crisisSecsLeft}s
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {rainEvent.active && (
               <motion.div
@@ -111,12 +160,47 @@ export function Dashboard() {
           <AnomalyBanner anomalies={anomalies} onDismiss={acknowledgeAnomaly} />
         </div>
 
-        {/* Right: Water Quality Score gauge */}
-        <WaterQualityGauge
-          score={score}
-          sensorName={displaySensor}
-          offline={isDisplayOffline}
-        />
+        {/* Right: WQS gauge + crisis demo button */}
+        <div className="flex flex-col gap-2 items-center sm:items-end shrink-0 w-full sm:w-auto">
+          <WaterQualityGauge
+            score={score}
+            sensorName={displaySensor}
+            offline={isDisplayOffline}
+          />
+          {/* Simulate Crisis button — demo tool */}
+          <motion.button
+            onClick={triggerCrisis}
+            disabled={isCrisis}
+            whileHover={{ scale: isCrisis ? 1 : 1.03 }}
+            whileTap={{ scale: isCrisis ? 1 : 0.97 }}
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-[10px] font-mono tracking-widest uppercase border transition-all disabled:cursor-not-allowed"
+            style={{
+              borderColor: isCrisis ? "rgba(255,45,85,0.55)" : "rgba(255,45,85,0.28)",
+              background: isCrisis
+                ? "rgba(255,45,85,0.14)"
+                : "rgba(255,45,85,0.06)",
+              color: isCrisis ? "#ff2d55" : "#ff5577",
+              boxShadow: isCrisis ? "0 0 12px rgba(255,45,85,0.2)" : "none",
+            }}
+            data-testid="simulate-crisis-btn"
+          >
+            {isCrisis ? (
+              <>
+                <motion.div
+                  animate={{ opacity: [1, 0.3, 1] }}
+                  transition={{ repeat: Infinity, duration: 0.7 }}
+                  className="w-1.5 h-1.5 rounded-full bg-[#ff2d55]"
+                />
+                Crisis: {crisisSecsLeft}s remaining
+              </>
+            ) : (
+              <>
+                <Zap className="w-3 h-3" />
+                Simulate Crisis
+              </>
+            )}
+          </motion.button>
+        </div>
       </div>
 
       {/* ── Metric cards ────────────────────────────────────────────────── */}
