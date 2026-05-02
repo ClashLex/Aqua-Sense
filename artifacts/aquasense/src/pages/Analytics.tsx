@@ -1,615 +1,823 @@
 import { useState, useCallback } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip,
-  ResponsiveContainer, RadialBarChart, RadialBar, PolarAngleAxis,
-  ReferenceLine, ReferenceArea,
+  ResponsiveContainer, ReferenceLine, ReferenceArea,
 } from "recharts";
-import { ClipboardCopy, Check, ChevronUp, ChevronDown, ChevronsUpDown } from "lucide-react";
+import {
+  AlertTriangle, CheckCircle2, ClipboardCopy, Check,
+  FlaskConical, Waves, Thermometer, Wind, Filter,
+  Activity, ShieldAlert, Radio, Clock,
+} from "lucide-react";
 import { useSensorData, SENSORS, SensorName } from "../hooks/useSensorData";
-import { MetricType, StatusType } from "../utils/thresholds";
+import { MetricType } from "../utils/thresholds";
 import { predictNext } from "../utils/linearRegression";
 import { useTheme } from "../contexts/ThemeContext";
 
-// ── Constants ──────────────────────────────────────────────────────────────
-
-const METRICS: MetricType[] = ["pH", "Turbidity", "Temperature", "DO", "TDS"];
+// ── Palette (matches RealTimeChart) ─────────────────────────────────────────
 
 const METRIC_COLORS: Record<MetricType, string> = {
-  pH: "#2563eb", Turbidity: "#16a34a", Temperature: "#d97706", DO: "#7c3aed", TDS: "#0891b2",
+  pH:          "#2563eb",
+  Turbidity:   "#0d9488",
+  Temperature: "#f59e0b",
+  DO:          "#f43f5e",
+  TDS:         "#7c3aed",
 };
+
 const METRIC_UNITS: Record<MetricType, string> = {
   pH: "", Turbidity: " NTU", Temperature: "°C", DO: " mg/L", TDS: " ppm",
 };
+
 const METRIC_LABELS: Record<MetricType, string> = {
   pH: "pH Level", Turbidity: "Turbidity", Temperature: "Temperature", DO: "Dissolved O₂", TDS: "TDS",
 };
 
-const TIME_RANGES = ["1hr", "6hr", "24hr", "7d"] as const;
-type TimeRange = (typeof TIME_RANGES)[number];
-const POINTS_FOR_RANGE: Record<TimeRange, number> = { "1hr": 60, "6hr": 60, "24hr": 60, "7d": 60 };
+const METRIC_ICONS: Record<MetricType, React.ElementType> = {
+  pH: FlaskConical, Turbidity: Waves, Temperature: Thermometer, DO: Wind, TDS: Filter,
+};
 
-type SortCol = "timestamp" | "sensor" | "metric" | "value" | "severity" | "status";
-type SortDir = "asc" | "desc";
-const SEVERITY_RANK: Record<string, number> = { CRITICAL: 3, HIGH: 2, MEDIUM: 1 };
+const METRICS: MetricType[] = ["pH", "Turbidity", "Temperature", "DO", "TDS"];
 
 const SEV_COLORS: Record<string, string> = {
   CRITICAL: "#dc2626", HIGH: "#ea580c", MEDIUM: "#d97706", LOW: "#16a34a",
 };
 
-// ── Helper functions ────────────────────────────────────────────────────────
+const TIME_RANGES = ["1h", "6h", "24h", "7d"] as const;
+type TimeRange = typeof TIME_RANGES[number];
 
-function calcWaterScore(snap: Record<MetricType, { status: string }>): number {
+// ── Score helpers ────────────────────────────────────────────────────────────
+
+function calcScore(snap: Record<MetricType, { status: string }>): number {
   const w: Record<MetricType, number> = { pH: 25, Turbidity: 20, Temperature: 15, DO: 25, TDS: 15 };
   let s = 0;
-  for (const m of METRICS) s += snap[m].status === "SAFE" ? w[m] : snap[m].status === "WARNING" ? w[m] * 0.5 : 0;
+  for (const m of METRICS) {
+    s += snap[m].status === "SAFE" ? w[m] : snap[m].status === "WARNING" ? w[m] * 0.5 : 0;
+  }
   return Math.round(s);
 }
 
-function scoreLabel(score: number): { label: string; color: string } {
-  if (score >= 80) return { label: "Excellent", color: "#16a34a" };
-  if (score >= 50) return { label: "Good", color: "#d97706" };
-  if (score >= 25) return { label: "Poor", color: "#ea580c" };
-  return { label: "Critical", color: "#dc2626" };
+function scoreInfo(s: number): { label: string; color: string } {
+  if (s >= 80) return { label: "Excellent", color: "#16a34a" };
+  if (s >= 50) return { label: "Good",      color: "#d97706" };
+  if (s >= 25) return { label: "Poor",      color: "#ea580c" };
+  return               { label: "Critical", color: "#dc2626" };
 }
 
-function genHeatmap(
-  sensor: SensorName,
-  currentStatuses: Record<MetricType, StatusType>,
-): StatusType[][] {
-  const seed = sensor.split("").reduce((acc, c, i) => acc + c.charCodeAt(0) * (i + 3), 0);
-  return METRICS.map((metric, mi) =>
-    Array.from({ length: 24 }, (_, h): StatusType => {
-      if (h === 23) return currentStatuses[metric];
-      const r = Math.abs(Math.sin(seed * 0.017 + mi * 2.718 + h * 0.523));
-      return r > 0.91 ? "DANGER" : r > 0.74 ? "WARNING" : "SAFE";
-    }),
+// ── Minimal SVG arc gauge ────────────────────────────────────────────────────
+
+function ScoreGauge({ score }: { score: number }) {
+  const cx = 110, cy = 104, R = 84, sw = 14;
+  const startDeg = 135, totalSweep = 270;
+  const toRad = (d: number) => (d * Math.PI) / 180;
+  const arcPath = (a: number, b: number) => {
+    const [sx, sy] = [cx + R * Math.cos(toRad(a)), cy + R * Math.sin(toRad(a))];
+    const [ex, ey] = [cx + R * Math.cos(toRad(b)), cy + R * Math.sin(toRad(b))];
+    return `M ${sx.toFixed(2)} ${sy.toFixed(2)} A ${R} ${R} 0 ${b - a > 180 ? 1 : 0} 1 ${ex.toFixed(2)} ${ey.toFixed(2)}`;
+  };
+
+  const { label, color } = scoreInfo(score);
+  const fillEnd = startDeg + Math.max(score, 1) / 100 * totalSweep;
+
+  return (
+    <div className="flex flex-col items-center">
+      <svg viewBox="0 0 220 188" width="200" height="172">
+        {/* Track */}
+        <path
+          d={arcPath(startDeg, startDeg + totalSweep)}
+          fill="none"
+          stroke="var(--app-border)"
+          strokeWidth={sw}
+          strokeLinecap="round"
+        />
+        {/* Fill */}
+        {score > 0 && (
+          <path
+            d={arcPath(startDeg, fillEnd)}
+            fill="none"
+            stroke={color}
+            strokeWidth={sw}
+            strokeLinecap="round"
+            style={{ transition: "stroke 0.6s ease" }}
+          />
+        )}
+        {/* Score number — large */}
+        <text
+          x={cx}
+          y={cy + 16}
+          textAnchor="middle"
+          fill={color}
+          fontSize="52"
+          fontFamily="DM Mono, monospace"
+          fontWeight="500"
+          style={{ transition: "fill 0.6s ease" }}
+        >
+          {score}
+        </text>
+        {/* /100 */}
+        <text
+          x={cx}
+          y={cy + 36}
+          textAnchor="middle"
+          fill="var(--app-text-3)"
+          fontSize="12"
+          fontFamily="DM Mono, monospace"
+        >
+          / 100
+        </text>
+      </svg>
+      {/* Label below arc */}
+      <span
+        className="text-lg font-bold -mt-3"
+        style={{ color, fontFamily: "var(--app-font-display)" }}
+      >
+        {label}
+      </span>
+      <span className="text-[11px] mt-1" style={{ color: "var(--app-text-3)" }}>
+        Water Quality Score
+      </span>
+    </div>
   );
 }
 
-function generateReportText(
-  sensorName: string,
+// ── Report generator ─────────────────────────────────────────────────────────
+
+function generateReport(
+  sensor: SensorName,
   snap: Record<MetricType, { value: number; unit: string; status: string; label: string }>,
-  anomalies: Array<{ timestamp: Date; sensor: string; metric: MetricType; value: number; severity: string; resolved: boolean }>,
+  anomalies: { timestamp: Date; sensor: string; metric: MetricType; value: number; severity: string; resolved: boolean }[],
 ): string {
   const hr = "━".repeat(46);
   const now = new Date();
-  const lines: string[] = [
+  return [
     hr,
     "  AQUASENSE 2.0 — WATER QUALITY REPORT",
     `  Generated : ${now.toLocaleString()}`,
-    `  Sensor    : ${sensorName}`,
+    `  Sensor    : ${sensor}`,
     hr,
     "",
     "  CURRENT READINGS",
     "  " + "─".repeat(36),
     ...METRICS.map((m) => {
       const r = snap[m];
-      const label = METRIC_LABELS[m].padEnd(15);
+      const lbl = METRIC_LABELS[m].padEnd(15);
       const val = `${r.value.toFixed(m === "TDS" ? 0 : 2)}${r.unit}`.padEnd(12);
-      return `    ${label} ${val} [${r.status}]`;
+      return `    ${lbl} ${val} [${r.status}]`;
     }),
     "",
-    "  24-HOUR ANOMALY SUMMARY",
+    "  ANOMALY SUMMARY",
     "  " + "─".repeat(36),
-    `    Total anomalies  : ${anomalies.length}`,
-    `    Active alerts    : ${anomalies.filter((a) => !a.resolved).length}`,
-    `    Critical events  : ${anomalies.filter((a) => a.severity === "CRITICAL").length}`,
-    `    High severity    : ${anomalies.filter((a) => a.severity === "HIGH").length}`,
-    `    Medium severity  : ${anomalies.filter((a) => a.severity === "MEDIUM").length}`,
-    "",
-    "  ANOMALY LOG (last 10)",
-    "  " + "─".repeat(36),
-    ...(anomalies.length === 0
-      ? ["    No anomalies recorded in this session."]
-      : [...anomalies]
-          .sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime())
-          .slice(0, 10)
-          .map((a) => {
-            const ts = a.timestamp.toLocaleTimeString();
-            return `    [${ts}] ${a.sensor} / ${a.metric} — ${a.value.toFixed(2)}${METRIC_UNITS[a.metric]}  (${a.severity})`;
-          })),
+    `    Total      : ${anomalies.length}`,
+    `    Active     : ${anomalies.filter((a) => !a.resolved).length}`,
+    `    Critical   : ${anomalies.filter((a) => a.severity === "CRITICAL").length}`,
     "",
     hr,
-  ];
-  return lines.join("\n");
+  ].join("\n");
 }
 
-// ── Sort icon ───────────────────────────────────────────────────────────────
+// ── Custom Tooltip ────────────────────────────────────────────────────────────
 
-function SortIcon({ col, active, dir }: { col: SortCol; active: SortCol; dir: SortDir }) {
-  if (col !== active) return <ChevronsUpDown className="w-3 h-3 opacity-30 inline ml-1" />;
-  return dir === "asc"
-    ? <ChevronUp className="w-3 h-3 text-[#2563eb] inline ml-1" />
-    : <ChevronDown className="w-3 h-3 text-[#2563eb] inline ml-1" />;
+function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: { dataKey: string; value: number; color: string }[]; label?: number }) {
+  if (!active || !payload?.length) return null;
+  const visible = payload.filter((p) => p.dataKey !== "pred" && p.value != null);
+  if (!visible.length) return null;
+
+  return (
+    <div
+      style={{
+        background:   "var(--app-surface)",
+        border:       "1px solid var(--app-border)",
+        borderRadius: 10,
+        padding:      "10px 14px",
+        boxShadow:    "0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
+        minWidth:     150,
+      }}
+    >
+      <p style={{ fontSize: 10, fontFamily: "DM Mono", color: "var(--app-text-3)", marginBottom: 8 }}>
+        T-{(60 - Number(label)) * 5}s ago
+      </p>
+      {visible.map((entry) => {
+        const m = entry.dataKey as MetricType;
+        const unit = METRIC_UNITS[m] ?? "";
+        return (
+          <div key={m} className="flex items-center justify-between gap-4" style={{ marginBottom: 4 }}>
+            <div className="flex items-center gap-1.5">
+              <span style={{ width: 7, height: 7, borderRadius: "50%", background: entry.color, display: "inline-block", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, color: "var(--app-text-2)", fontWeight: 500 }}>{METRIC_LABELS[m]}</span>
+            </div>
+            <span style={{ fontSize: 11, fontFamily: "DM Mono", fontWeight: 600, color: "var(--app-text-1)" }}>
+              {Number(entry.value).toFixed(m === "TDS" ? 0 : 2)}{unit}
+            </span>
+          </div>
+        );
+      })}
+    </div>
+  );
 }
 
-// ── Component ───────────────────────────────────────────────────────────────
+// ── Relative time ─────────────────────────────────────────────────────────────
+
+function relativeTime(d: Date): string {
+  const diff = Date.now() - d.getTime();
+  const s = Math.floor(diff / 1000);
+  if (s < 60)  return `${s}s ago`;
+  if (s < 3600) return `${Math.floor(s / 60)}m ago`;
+  return `${Math.floor(s / 3600)}h ago`;
+}
+
+// ── Main Component ────────────────────────────────────────────────────────────
 
 export function Analytics() {
   const { currentReadings, history, anomalies } = useSensorData();
   const { theme } = useTheme();
   const isDark = theme === "dark";
 
-  const [range, setRange] = useState<TimeRange>("1hr");
-  const [activeSensor, setActiveSensor] = useState<SensorName>(SENSORS[0]);
-  const [sortCol, setSortCol] = useState<SortCol>("timestamp");
-  const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [range, setRange] = useState<TimeRange>("1h");
+  const [sensor, setSensor] = useState<SensorName>(SENSORS[0]);
+  const [visible, setVisible] = useState<Record<MetricType, boolean>>({
+    pH: true, Turbidity: true, Temperature: true, DO: true, TDS: false,
+  });
   const [copied, setCopied] = useState(false);
 
-  const points = POINTS_FOR_RANGE[range];
-  const hist = history[activeSensor];
-  const snap = currentReadings[activeSensor];
+  const hist   = history[sensor];
+  const snap   = currentReadings[sensor];
+  const score  = calcScore(snap);
+  const { color: scoreColor } = scoreInfo(score);
 
-  const score = calcWaterScore(snap);
-  const { label: scoreLabel2, color: scoreColor } = scoreLabel(score);
+  // Chart data: actuals
+  const PRED_STEPS = 20;
+  const actualLen  = hist.pH.length;
+  const pivot      = actualLen - 1;
+  const totalLen   = actualLen + PRED_STEPS;
 
-  const currentStatuses = Object.fromEntries(
-    METRICS.map((m) => [m, snap[m].status as StatusType]),
-  ) as Record<MetricType, StatusType>;
-  const heatmapData = genHeatmap(activeSensor, currentStatuses);
-  const now = new Date();
-  const hourLabels = Array.from({ length: 24 }, (_, i) => {
-    const h = (now.getHours() - 23 + i + 24) % 24;
-    return h.toString().padStart(2, "0");
+  // Build first-visible-metric predictions for dashed line
+  const predMetric = (METRICS.find((m) => visible[m]) ?? "pH") as MetricType;
+  const predValues = predictNext(hist[predMetric], PRED_STEPS);
+
+  // Unified chart data: actual points + prediction tail
+  const chartData = Array.from({ length: totalLen }, (_, i) => {
+    const point: Record<string, number | null> = { t: i };
+    if (i < actualLen) {
+      for (const m of METRICS) point[m] = Number(hist[m][i]?.toFixed(3) ?? 0);
+      point.pred = null;
+    } else {
+      for (const m of METRICS) point[m] = null;
+      // Stitch prediction to last actual value at pivot
+      point.pred = Number(predValues[i - actualLen]?.toFixed(3) ?? 0);
+    }
+    return point;
   });
+  // Connect pred at pivot
+  if (chartData[pivot]) chartData[pivot].pred = chartData[pivot][predMetric];
 
-  const tickColor = isDark ? "#64748b" : "#94a3b8";
-  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+  const gridColor = isDark ? "rgba(255,255,255,0.05)" : "#f1f5f9";
+  const tickColor = isDark ? "#475569" : "#94a3b8";
 
-  const handleSort = (col: SortCol) => {
-    if (col === sortCol) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
-    else { setSortCol(col); setSortDir("desc"); }
-  };
-  const sortedAnomalies = [...anomalies].sort((a, b) => {
-    let cmp = 0;
-    if (sortCol === "timestamp") cmp = a.timestamp.getTime() - b.timestamp.getTime();
-    else if (sortCol === "sensor") cmp = a.sensor.localeCompare(b.sensor);
-    else if (sortCol === "metric") cmp = a.metric.localeCompare(b.metric);
-    else if (sortCol === "value") cmp = a.value - b.value;
-    else if (sortCol === "severity") cmp = (SEVERITY_RANK[a.severity] ?? 0) - (SEVERITY_RANK[b.severity] ?? 0);
-    else if (sortCol === "status") cmp = Number(a.resolved) - Number(b.resolved);
-    return sortDir === "desc" ? -cmp : cmp;
-  });
+  // Summary stats
+  const activeAlerts = anomalies.filter((a) => !a.resolved).length;
+  const worstMetric  = METRICS.reduce<MetricType | null>((worst, m) => {
+    if (!worst) return snap[m].status !== "SAFE" ? m : null;
+    const rank = (s: string) => s === "DANGER" ? 2 : s === "WARNING" ? 1 : 0;
+    return rank(snap[m].status) > rank(snap[worst].status) ? m : worst;
+  }, null);
 
   const handleExport = useCallback(async () => {
-    const text = generateReportText(activeSensor, snap as Record<MetricType, { value: number; unit: string; status: string; label: string }>, anomalies);
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      document.body.removeChild(ta);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2500);
-    }
-  }, [activeSensor, snap, anomalies]);
+    const text = generateReport(sensor, snap as Record<MetricType, { value: number; unit: string; status: string; label: string }>, anomalies);
+    try { await navigator.clipboard.writeText(text); } catch { /* fallback */ }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2500);
+  }, [sensor, snap, anomalies]);
 
-  const TABLE_COLS: { key: SortCol; label: string }[] = [
-    { key: "timestamp", label: "Timestamp" },
-    { key: "sensor", label: "Sensor" },
-    { key: "metric", label: "Metric" },
-    { key: "value", label: "Value" },
-    { key: "severity", label: "Severity" },
-    { key: "status", label: "Status" },
-  ];
+  const toggleMetric = (m: MetricType) =>
+    setVisible((p) => ({ ...p, [m]: !p[m] }));
 
-  const tooltipStyle = {
-    background: isDark ? "#1e293b" : "#ffffff",
-    border: `1px solid ${isDark ? "#334155" : "#e2e8f0"}`,
-    borderRadius: 6,
-    fontSize: 10,
-    fontFamily: "DM Mono",
-    color: isDark ? "#f1f5f9" : "#0f172a",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-  };
+  // Sorted feed
+  const feed = [...anomalies].sort((a, b) => b.timestamp.getTime() - a.timestamp.getTime());
 
   return (
     <div className="space-y-6" data-testid="analytics-page">
 
-      {/* ── Header row ─────────────────────────────────────────────────── */}
+      {/* ── Global controls bar ──────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-xs font-medium" style={{ color: "var(--app-text-2)" }}>Sensor:</span>
-        {SENSORS.map((s) => (
-          <button
-            key={s}
-            onClick={() => setActiveSensor(s)}
-            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
-            style={{
-              borderColor: activeSensor === s ? "var(--app-primary-tint-border)" : "var(--app-border)",
-              background: activeSensor === s ? "var(--app-primary-tint)" : "transparent",
-              color: activeSensor === s ? "#2563eb" : "var(--app-text-2)",
-            }}
-            data-testid={`sensor-tab-${s.replace(/\s+/g, "-").toLowerCase()}`}
-          >
-            {s}
-          </button>
-        ))}
-
-        <div className="ml-auto flex items-center gap-2 flex-wrap">
-          {TIME_RANGES.map((r) => (
+        <div className="flex items-center gap-1.5 flex-wrap">
+          <span className="text-xs font-medium" style={{ color: "var(--app-text-3)" }}>Sensor</span>
+          {SENSORS.map((s) => (
             <button
-              key={r}
-              onClick={() => setRange(r)}
-              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
+              key={s}
+              onClick={() => setSensor(s)}
+              className="px-3 py-1.5 rounded-full text-xs font-semibold transition-all"
               style={{
-                borderColor: range === r ? "var(--app-primary-tint-border)" : "var(--app-border)",
-                background: range === r ? "var(--app-primary-tint)" : "transparent",
-                color: range === r ? "#2563eb" : "var(--app-text-2)",
+                background: sensor === s ? "#2563eb" : (isDark ? "rgba(255,255,255,0.07)" : "#f1f5f9"),
+                color:      sensor === s ? "#fff"     : "var(--app-text-2)",
+                border:     `1px solid ${sensor === s ? "transparent" : "var(--app-border)"}`,
               }}
-              data-testid={`time-range-${r}`}
+              data-testid={`sensor-tab-${s.replace(/\s+/g, "-").toLowerCase()}`}
             >
-              {r}
+              {s}
             </button>
           ))}
+        </div>
 
+        <div className="ml-auto flex items-center gap-2">
           <button
             onClick={handleExport}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all"
             style={{
-              borderColor: copied ? "#bbf7d0" : "var(--app-border)",
-              background: copied ? "#f0fdf4" : "transparent",
-              color: copied ? "#16a34a" : "var(--app-text-2)",
+              borderColor: copied ? "rgba(22,163,74,0.35)" : "var(--app-border)",
+              background:  copied ? "rgba(22,163,74,0.08)" : "transparent",
+              color:       copied ? "#16a34a"              : "var(--app-text-2)",
             }}
             data-testid="export-report-btn"
           >
-            {copied
-              ? <><Check className="w-3 h-3" /> Copied!</>
-              : <><ClipboardCopy className="w-3 h-3" /> Export Report</>}
+            {copied ? <><Check className="w-3 h-3" /> Copied!</> : <><ClipboardCopy className="w-3 h-3" /> Export</>}
           </button>
         </div>
       </div>
 
-      {/* ── Score gauge + per-metric charts ────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {/* Score gauge */}
+      {/* ── Two-column layout ────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[65%_1fr] gap-6">
+
+        {/* ── LEFT: Main chart card ──────────────────────────────────────── */}
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="rounded-xl border p-4 flex flex-col items-center justify-center"
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-xl border flex flex-col"
           style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
-          data-testid="quality-score-gauge"
+          data-testid="main-chart-card"
         >
-          <span className="text-[10px] font-medium tracking-wide uppercase mb-3" style={{ color: "var(--app-text-2)" }}>
-            Water Quality Score
-          </span>
-          <div className="relative">
-            <RadialBarChart
-              width={150}
-              height={150}
-              innerRadius={50}
-              outerRadius={70}
-              data={[{ value: score, fill: scoreColor }]}
-              startAngle={90}
-              endAngle={-270}
-            >
-              <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-              <RadialBar dataKey="value" cornerRadius={4} background={{ fill: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" }} />
-            </RadialBarChart>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-semibold" style={{ color: scoreColor, fontFamily: "DM Mono, monospace" }}>
-                {score}
-              </span>
-              <span className="text-[10px]" style={{ color: scoreColor, fontFamily: "DM Mono, monospace" }}>/ 100</span>
+          {/* Card header */}
+          <div
+            className="flex flex-wrap items-start justify-between gap-3 px-6 pt-5 pb-4"
+            style={{ borderBottom: "1px solid var(--app-border)" }}
+          >
+            <div>
+              <h2 className="text-sm font-semibold" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+                Sensor Trends
+              </h2>
+              <p className="text-[11px] mt-0.5" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}>
+                {sensor} · {hist.pH.length} pts · 5s interval
+              </p>
+            </div>
+
+            {/* Time range pills */}
+            <div className="flex items-center gap-1.5" role="group">
+              {TIME_RANGES.map((r) => (
+                <button
+                  key={r}
+                  onClick={() => setRange(r)}
+                  className="px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all"
+                  style={{
+                    background: range === r ? "#2563eb" : (isDark ? "rgba(255,255,255,0.07)" : "#f1f5f9"),
+                    color:      range === r ? "#ffffff" : "var(--app-text-2)",
+                    border:     `1px solid ${range === r ? "transparent" : "var(--app-border)"}`,
+                  }}
+                  data-testid={`time-range-${r}`}
+                >
+                  {r}
+                </button>
+              ))}
             </div>
           </div>
-          <span className="text-sm font-semibold mt-1" style={{ color: scoreColor, fontFamily: "var(--app-font-display)" }}>
-            {scoreLabel2}
-          </span>
-          <div className="mt-4 flex flex-col gap-1.5 w-full pt-3" style={{ borderTop: "1px solid var(--app-border-subtle)" }}>
-            <div className="flex items-center gap-2">
-              <svg width="20" height="4" className="shrink-0">
-                <line x1="0" y1="2" x2="20" y2="2" stroke="#2563eb" strokeWidth="1.5" />
+
+          {/* Metric toggle pills */}
+          <div className="flex flex-wrap gap-1.5 px-6 pt-4">
+            {METRICS.map((m) => {
+              const on = visible[m];
+              const isPred = on && m === predMetric;
+              return (
+                <button
+                  key={m}
+                  onClick={() => toggleMetric(m)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all"
+                  style={{
+                    background: on ? METRIC_COLORS[m] : (isDark ? "rgba(255,255,255,0.06)" : "#f1f5f9"),
+                    color:      on ? "#fff"            : "var(--app-text-2)",
+                    border:     `1px solid ${on ? "transparent" : "var(--app-border)"}`,
+                  }}
+                  data-testid={`toggle-metric-${m.toLowerCase()}`}
+                  title={isPred ? `${m} (forecast shown)` : m}
+                >
+                  {m}
+                  {isPred && (
+                    <span
+                      className="text-[8px] px-1 py-0.5 rounded ml-0.5"
+                      style={{ background: "rgba(255,255,255,0.25)", fontWeight: 700, letterSpacing: "0.05em" }}
+                    >
+                      +pred
+                    </span>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Chart */}
+          <div className="px-2 pt-4 pb-3 flex-1">
+            <ResponsiveContainer width="100%" height={310}>
+              <LineChart data={chartData} margin={{ top: 8, right: 24, bottom: 28, left: -4 }}>
+                <CartesianGrid stroke={gridColor} vertical={false} strokeDasharray="0" />
+
+                <XAxis
+                  dataKey="t"
+                  tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono" }}
+                  tickLine={false}
+                  axisLine={false}
+                  tickFormatter={(v) => {
+                    const ago = (60 - Number(v)) * 5;
+                    if (Number(v) >= actualLen) return "";
+                    if (ago === 0)   return "now";
+                    if (ago === 300) return "-5m";
+                    if (ago % 60 === 0) return `-${ago / 60}m`;
+                    return "";
+                  }}
+                  interval={9}
+                  label={{
+                    value: "← older                                             newer →",
+                    position: "insideBottom",
+                    offset: -14,
+                    fill: tickColor,
+                    fontSize: 9,
+                    fontFamily: "DM Mono",
+                  }}
+                />
+                <YAxis
+                  tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono" }}
+                  tickLine={false}
+                  axisLine={false}
+                  width={38}
+                />
+
+                <Tooltip content={<ChartTooltip />} cursor={{ stroke: isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)", strokeWidth: 1, strokeDasharray: "4 3" }} />
+
+                {/* NOW divider */}
+                <ReferenceLine
+                  x={pivot}
+                  stroke={isDark ? "rgba(255,255,255,0.10)" : "rgba(0,0,0,0.10)"}
+                  strokeDasharray="3 3"
+                />
+
+                {/* Predicted zone highlight + label */}
+                <ReferenceArea
+                  x1={pivot}
+                  x2={totalLen - 1}
+                  fill={isDark ? "rgba(37,99,235,0.05)" : "rgba(37,99,235,0.04)"}
+                  stroke="none"
+                  label={{
+                    value: "PREDICTED →",
+                    position: "insideTopLeft",
+                    fill: "#2563eb",
+                    fontSize: 9,
+                    fontFamily: "DM Mono",
+                    fontWeight: 700,
+                    letterSpacing: 1,
+                    dx: 8,
+                    dy: 6,
+                  }}
+                />
+
+                {/* Actual metric lines */}
+                {METRICS.map((m) =>
+                  visible[m] ? (
+                    <Line
+                      key={`actual-${m}`}
+                      type="monotone"
+                      dataKey={m}
+                      stroke={METRIC_COLORS[m]}
+                      strokeWidth={1.8}
+                      dot={false}
+                      isAnimationActive={false}
+                      connectNulls={false}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    />
+                  ) : null,
+                )}
+
+                {/* Prediction dashed line — blue, for first visible metric */}
+                <Line
+                  key="pred"
+                  type="monotone"
+                  dataKey="pred"
+                  stroke="#2563eb"
+                  strokeWidth={1.6}
+                  strokeDasharray="6 4"
+                  dot={false}
+                  isAnimationActive={false}
+                  connectNulls={true}
+                  opacity={0.7}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Legend strip */}
+          <div
+            className="flex flex-wrap gap-x-5 gap-y-1 px-6 pb-5 pt-3"
+            style={{ borderTop: "1px solid var(--app-border-subtle)" }}
+          >
+            {METRICS.filter((m) => visible[m]).map((m) => (
+              <div key={m} className="flex items-center gap-1.5">
+                <svg width="16" height="2" className="shrink-0">
+                  <line x1="0" y1="1" x2="16" y2="1" stroke={METRIC_COLORS[m]} strokeWidth="2" strokeLinecap="round" />
+                </svg>
+                <span style={{ fontSize: 10, color: "var(--app-text-2)", fontWeight: 500 }}>
+                  {METRIC_LABELS[m]}
+                  <span style={{ color: "var(--app-text-3)", marginLeft: 2 }}>{METRIC_UNITS[m]}</span>
+                </span>
+              </div>
+            ))}
+            <div className="flex items-center gap-1.5">
+              <svg width="16" height="2" className="shrink-0">
+                <line x1="0" y1="1" x2="16" y2="1" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeDasharray="4 3" />
               </svg>
-              <span className="text-[9px] tracking-wider font-medium" style={{ color: "var(--app-text-2)" }}>ACTUAL DATA</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <svg width="20" height="4" className="shrink-0">
-                <line x1="0" y1="2" x2="20" y2="2" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.5" />
-              </svg>
-              <span className="text-[9px] tracking-wider font-medium" style={{ color: "var(--app-text-2)" }}>2HR FORECAST</span>
+              <span style={{ fontSize: 10, color: "#2563eb", fontWeight: 600 }}>Predicted</span>
             </div>
           </div>
         </motion.div>
 
-        {/* Per-metric charts with prediction */}
-        <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          {METRICS.map((metric, idx) => {
-            const values = hist[metric].slice(-points);
-            const predictions = predictNext(values, 30);
-            const color = METRIC_COLORS[metric];
-            const pivot = values.length - 1;
+        {/* ── RIGHT: Gauge + Stats stacked ──────────────────────────────── */}
+        <div className="flex flex-col gap-6">
 
-            const chartData = [
-              ...values.map((v, i) => ({ i, actual: +v.toFixed(3), pred: i === pivot ? +v.toFixed(3) : null })),
-              ...predictions.map((v, i) => ({
-                i: values.length + i,
-                actual: null,
-                pred: +v.toFixed(3),
-              })),
-            ];
+          {/* Water Quality Score gauge */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.06 }}
+            className="rounded-xl border p-6 flex flex-col items-center"
+            style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+            data-testid="quality-score-gauge"
+          >
+            <ScoreGauge score={score} />
 
-            return (
-              <motion.div
-                key={metric}
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: idx * 0.05 }}
-                className="rounded-xl border p-3"
-                style={{ background: "var(--app-surface)", borderColor: `${color}30`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
-                data-testid={`metric-chart-${metric.toLowerCase()}`}
-              >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-semibold" style={{ color }}>
-                    {metric}{METRIC_UNITS[metric]}
-                  </span>
-                  <span
-                    className="text-[10px] font-medium px-1.5 py-0.5 rounded"
-                    style={{ color, background: `${color}12`, border: `1px solid ${color}25` }}
+            {/* Per-metric pills below gauge */}
+            <div className="flex flex-wrap justify-center gap-1.5 mt-4 pt-4 w-full" style={{ borderTop: "1px solid var(--app-border-subtle)" }}>
+              {METRICS.map((m) => {
+                const s = snap[m].status;
+                const c = s === "SAFE" ? "#16a34a" : s === "WARNING" ? "#d97706" : "#dc2626";
+                const Icon = METRIC_ICONS[m];
+                return (
+                  <div
+                    key={m}
+                    className="flex items-center gap-1 px-2 py-1 rounded-full text-[10px] font-semibold"
+                    style={{
+                      color:      c,
+                      background: `${c}10`,
+                      border:     `1px solid ${c}28`,
+                    }}
                   >
-                    {snap[metric].status}
-                  </span>
+                    <Icon className="w-2.5 h-2.5" />
+                    {m}
+                  </div>
+                );
+              })}
+            </div>
+          </motion.div>
+
+          {/* Summary stats panel */}
+          <motion.div
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="rounded-xl border p-5 flex flex-col gap-4"
+            style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+            data-testid="summary-stats"
+          >
+            <h3 className="text-xs font-semibold uppercase tracking-widest" style={{ color: "var(--app-text-3)" }}>
+              Session Summary
+            </h3>
+
+            {[
+              {
+                icon: ShieldAlert,
+                label: "Active Alerts",
+                value: activeAlerts,
+                color: activeAlerts > 0 ? "#dc2626" : "#16a34a",
+                valueStr: String(activeAlerts),
+              },
+              {
+                icon: Activity,
+                label: "Anomalies Logged",
+                value: anomalies.length,
+                color: "#d97706",
+                valueStr: String(anomalies.length),
+              },
+              {
+                icon: Radio,
+                label: "Sensors Online",
+                value: 3,
+                color: "#16a34a",
+                valueStr: "3 / 3",
+              },
+              {
+                icon: Clock,
+                label: "Worst Metric",
+                value: 0,
+                color: worstMetric ? METRIC_COLORS[worstMetric] : "#16a34a",
+                valueStr: worstMetric ? METRIC_LABELS[worstMetric] : "All Safe",
+              },
+            ].map(({ icon: Icon, label, color, valueStr }) => (
+              <div key={label} className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2.5">
+                  <div
+                    className="w-7 h-7 rounded-lg flex items-center justify-center shrink-0"
+                    style={{ background: `${color}12`, border: `1px solid ${color}24` }}
+                  >
+                    <Icon className="w-3.5 h-3.5" style={{ color }} />
+                  </div>
+                  <span className="text-xs font-medium" style={{ color: "var(--app-text-2)" }}>{label}</span>
                 </div>
+                <span
+                  className="text-xs font-bold tabular-nums"
+                  style={{ color, fontFamily: "DM Mono, monospace" }}
+                >
+                  {valueStr}
+                </span>
+              </div>
+            ))}
 
-                <ResponsiveContainer width="100%" height={110}>
-                  <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -28 }}>
-                    <CartesianGrid strokeDasharray="2 2" stroke={gridColor} vertical={false} />
-                    <XAxis
-                      dataKey="i"
-                      tickLine={false}
-                      axisLine={false}
-                      tick={{ fill: tickColor, fontSize: 8, fontFamily: "DM Mono" }}
-                      tickFormatter={(v) => {
-                        if (v === 0) return "─2hr";
-                        if (v === pivot) return "now";
-                        if (v === values.length + 29) return "+2hr";
-                        return "";
-                      }}
-                      ticks={[0, pivot, values.length + 29]}
-                    />
-                    <YAxis
-                      tick={{ fill: tickColor, fontSize: 9, fontFamily: "DM Mono" }}
-                      tickLine={false}
-                      axisLine={false}
-                      width={28}
-                    />
-                    <Tooltip
-                      contentStyle={{ ...tooltipStyle, border: `1px solid ${color}30` }}
-                      formatter={(v: number, name: string) => [
-                        `${v}${METRIC_UNITS[metric]}`,
-                        name === "pred" ? "Forecast" : "Actual",
-                      ]}
-                      labelFormatter={() => ""}
-                    />
+            {/* Current score bar */}
+            <div className="pt-1" style={{ borderTop: "1px solid var(--app-border-subtle)" }}>
+              <div className="flex justify-between mb-1.5">
+                <span className="text-[10px] font-medium" style={{ color: "var(--app-text-3)" }}>Quality Score</span>
+                <span className="text-[10px] font-bold" style={{ color: scoreColor, fontFamily: "DM Mono" }}>{score} / 100</span>
+              </div>
+              <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: "var(--app-border)" }}>
+                <motion.div
+                  className="h-full rounded-full"
+                  style={{ background: scoreColor }}
+                  initial={{ width: 0 }}
+                  animate={{ width: `${score}%` }}
+                  transition={{ duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }}
+                />
+              </div>
+            </div>
+          </motion.div>
 
-                    <ReferenceArea
-                      x1={values.length}
-                      x2={values.length + 29}
-                      fill={`${color}06`}
-                      stroke="none"
-                    />
-
-                    <ReferenceLine
-                      x={pivot}
-                      stroke={isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}
-                      strokeDasharray="3 2"
-                      label={{
-                        value: "NOW",
-                        position: "insideTopLeft",
-                        fill: tickColor,
-                        fontSize: 8,
-                        fontFamily: "DM Mono",
-                        dy: -2,
-                      }}
-                    />
-
-                    <Line type="monotone" dataKey="actual" stroke={color} strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls={false} name="actual" />
-                    <Line type="monotone" dataKey="pred" stroke={color} strokeWidth={1.2} strokeDasharray="5 3" dot={false} isAnimationActive={false} connectNulls={true} opacity={0.55} name="pred" />
-                  </LineChart>
-                </ResponsiveContainer>
-              </motion.div>
-            );
-          })}
         </div>
       </div>
 
-      {/* ── Anomaly Heatmap ─────────────────────────────────────────────── */}
+      {/* ── Anomaly Timeline Feed ─────────────────────────────────────────── */}
       <motion.div
-        initial={{ opacity: 0, y: 16 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.1 }}
-        className="rounded-xl border p-4"
+        transition={{ delay: 0.14 }}
+        className="rounded-xl border overflow-hidden"
         style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
-        data-testid="anomaly-heatmap"
+        data-testid="anomaly-timeline"
       >
-        <div className="flex flex-wrap items-center gap-4 mb-4">
-          <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>
-            24-Hour Anomaly Heatmap
-          </span>
-          <span className="text-xs" style={{ color: "var(--app-text-2)" }}>{activeSensor}</span>
-
-          <div className="ml-auto flex items-center gap-4">
-            {(["SAFE", "WARNING", "DANGER"] as StatusType[]).map((s) => {
+        {/* Header */}
+        <div
+          className="flex items-center justify-between px-6 py-4"
+          style={{ borderBottom: "1px solid var(--app-border)" }}
+        >
+          <div className="flex items-center gap-3">
+            <h3 className="text-sm font-semibold" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+              Anomaly History
+            </h3>
+            {anomalies.length > 0 && (
+              <span
+                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                style={{ background: "rgba(220,38,38,0.10)", color: "#dc2626", border: "1px solid rgba(220,38,38,0.25)" }}
+              >
+                {anomalies.length} event{anomalies.length !== 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            {(["SAFE", "WARNING", "DANGER"] as const).map((s) => {
               const c = s === "SAFE" ? "#16a34a" : s === "WARNING" ? "#d97706" : "#dc2626";
               return (
                 <div key={s} className="flex items-center gap-1.5">
-                  <div className="w-3 h-3 rounded-sm" style={{ background: `${c}25`, border: `1px solid ${c}45` }} />
-                  <span className="text-[9px] font-medium tracking-wider" style={{ color: c }}>{s}</span>
+                  <div className="w-2 h-2 rounded-full" style={{ background: c }} />
+                  <span className="text-[9px] font-semibold tracking-wider" style={{ color: c }}>{s}</span>
                 </div>
               );
             })}
           </div>
         </div>
 
-        <div className="overflow-x-auto">
-          <div style={{ minWidth: 560 }}>
-            <div className="flex mb-1">
-              <div className="shrink-0" style={{ width: 86 }} />
-              {hourLabels.map((h, i) => (
-                <div
-                  key={i}
-                  className="flex-1 text-center"
-                  style={{ fontSize: 8, fontFamily: "DM Mono", color: i === 23 ? "#2563eb" : tickColor, fontWeight: i === 23 ? 700 : 400, minWidth: 20 }}
-                >
-                  {h}
-                </div>
-              ))}
-            </div>
-
-            {METRICS.map((metric, mi) => {
-              const mColor = METRIC_COLORS[metric];
-              return (
-                <div key={metric} className="flex items-center mb-1.5">
-                  <div
-                    className="shrink-0 text-right pr-3"
-                    style={{ width: 86, fontSize: 9, fontFamily: "DM Mono", color: mColor, textTransform: "uppercase", letterSpacing: "0.06em" }}
-                  >
-                    {metric}
-                  </div>
-                  {heatmapData[mi].map((status, hi) => {
-                    const c = status === "SAFE" ? "#16a34a" : status === "WARNING" ? "#d97706" : "#dc2626";
-                    const isNow = hi === 23;
-                    const opacity = status === "SAFE" ? "18" : status === "WARNING" ? "35" : "55";
-                    return (
-                      <div
-                        key={hi}
-                        className="flex-1 rounded-sm transition-all"
-                        style={{
-                          minWidth: 20,
-                          height: 22,
-                          background: `${c}${opacity}`,
-                          border: `1px solid ${c}${isNow ? "80" : "25"}`,
-                          margin: "0 1px",
-                          cursor: "default",
-                          outline: isNow ? `2px solid ${c}30` : "none",
-                          outlineOffset: 1,
-                        }}
-                        title={`${metric} · ${hourLabels[hi]}:00 → ${status}`}
-                      />
-                    );
-                  })}
-                </div>
-              );
-            })}
-
-            <div className="flex mt-0.5">
-              <div className="shrink-0" style={{ width: 86 }} />
-              {hourLabels.map((_, i) => (
-                <div key={i} className="flex-1 text-center" style={{ minWidth: 20 }}>
-                  {i === 23 && (
-                    <span style={{ fontSize: 7, color: "#2563eb", fontFamily: "DM Mono", letterSpacing: 1 }}>NOW</span>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* ── Sortable anomaly history table ─────────────────────────────── */}
-      <div
-        className="rounded-xl border overflow-hidden"
-        style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
-        data-testid="anomaly-history-table"
-      >
+        {/* Feed */}
         <div
-          className="px-4 py-3 flex items-center justify-between"
-          style={{ borderBottom: "1px solid var(--app-border-subtle)" }}
+          className="divide-y overflow-y-auto"
+          style={{
+            maxHeight: 460,
+            divideColor: "var(--app-border-subtle)",
+            scrollbarWidth: "thin",
+            scrollbarColor: "var(--app-border) transparent",
+          }}
         >
-          <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>
-            Anomaly History
-          </span>
-          <span className="text-xs" style={{ color: "var(--app-text-3)" }}>
-            {anomalies.length} record{anomalies.length !== 1 ? "s" : ""} — click headers to sort
-          </span>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr style={{ borderBottom: "1px solid var(--app-border-subtle)" }}>
-                {TABLE_COLS.map(({ key, label }) => (
-                  <th
-                    key={key}
-                    onClick={() => handleSort(key)}
-                    className="px-4 py-2.5 text-left uppercase text-[10px] cursor-pointer select-none transition-colors"
-                    style={{ color: sortCol === key ? "#2563eb" : "var(--app-text-3)", fontFamily: "DM Mono" }}
-                    data-testid={`sort-col-${key}`}
+          {feed.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-14 gap-3">
+              <CheckCircle2 className="w-9 h-9 text-[#16a34a]" />
+              <p className="text-sm font-semibold" style={{ color: "var(--app-text-2)" }}>No anomalies detected</p>
+              <p className="text-xs" style={{ color: "var(--app-text-3)" }}>All sensors reading within safe ranges</p>
+            </div>
+          ) : (
+            <AnimatePresence initial={false}>
+              {feed.map((a, i) => {
+                const sevColor = SEV_COLORS[a.severity] ?? "#d97706";
+                const MetricIcon = METRIC_ICONS[a.metric];
+                const metricColor = METRIC_COLORS[a.metric];
+                return (
+                  <motion.div
+                    key={a.id}
+                    initial={{ opacity: 0, x: -8 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: Math.min(i * 0.02, 0.3) }}
+                    className="flex items-start gap-4 px-6 py-4 relative"
+                    style={{ borderLeft: `4px solid ${sevColor}` }}
+                    data-testid={`anomaly-feed-${a.id}`}
                   >
-                    <span className="inline-flex items-center gap-0.5">
-                      {label}
-                      <SortIcon col={key} active={sortCol} dir={sortDir} />
-                    </span>
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {sortedAnomalies.length === 0 ? (
-                <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-xs" style={{ color: "var(--app-text-3)" }}>
-                    No anomalies recorded
-                  </td>
-                </tr>
-              ) : (
-                sortedAnomalies.map((a) => {
-                  const sevColor = SEV_COLORS[a.severity] ?? "#d97706";
-                  return (
-                    <tr
-                      key={a.id}
-                      className="transition-colors"
+                    {/* Icon */}
+                    <div
+                      className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 mt-0.5"
                       style={{
-                        borderBottom: "1px solid var(--app-border-subtle)",
-                        background: a.resolved ? "transparent" : `${sevColor}06`,
+                        background: a.resolved ? "rgba(22,163,74,0.10)" : `${sevColor}12`,
+                        border:     `1px solid ${a.resolved ? "rgba(22,163,74,0.25)" : `${sevColor}28`}`,
                       }}
-                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--app-surface-2)"; }}
-                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = a.resolved ? "transparent" : `${sevColor}06`; }}
-                      data-testid={`anomaly-row-${a.id}`}
                     >
-                      <td className="px-4 py-2.5 tabular-nums" style={{ color: "var(--app-text-2)", fontFamily: "DM Mono" }}>
-                        {a.timestamp.toLocaleTimeString()}
-                      </td>
-                      <td className="px-4 py-2.5" style={{ color: "var(--app-text-4)" }}>{a.sensor}</td>
-                      <td className="px-4 py-2.5 font-medium" style={{ color: METRIC_COLORS[a.metric] }}>
-                        {a.metric}
-                      </td>
-                      <td className="px-4 py-2.5 tabular-nums" style={{ color: "var(--app-text-1)", fontFamily: "DM Mono" }}>
-                        {a.value.toFixed(2)}{METRIC_UNITS[a.metric]}
-                      </td>
-                      <td className="px-4 py-2.5">
+                      {a.resolved
+                        ? <CheckCircle2 className="w-4 h-4 text-[#16a34a]" />
+                        : <AlertTriangle className="w-4 h-4" style={{ color: sevColor }} />
+                      }
+                    </div>
+
+                    {/* Content */}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 flex-wrap mb-1">
+                        {/* Severity badge */}
                         <span
-                          className="px-1.5 py-0.5 rounded text-[10px] font-medium"
-                          style={{ color: sevColor, background: `${sevColor}14`, border: `1px solid ${sevColor}30` }}
-                          data-testid={`severity-badge-${a.id}`}
+                          className="text-[10px] font-bold px-2 py-0.5 rounded-full"
+                          style={{
+                            color:      sevColor,
+                            background: `${sevColor}12`,
+                            border:     `1px solid ${sevColor}28`,
+                          }}
                         >
                           {a.severity}
                         </span>
-                      </td>
-                      <td className="px-4 py-2.5">
+                        {/* Metric pill */}
                         <span
-                          className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                          className="flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full"
                           style={{
-                            color: a.resolved ? "#16a34a" : "#dc2626",
-                            background: a.resolved ? "#f0fdf4" : "#fef2f2",
-                            border: `1px solid ${a.resolved ? "#bbf7d0" : "#fca5a5"}`,
+                            color:      metricColor,
+                            background: `${metricColor}10`,
+                            border:     `1px solid ${metricColor}24`,
                           }}
-                          data-testid={`status-badge-${a.id}`}
                         >
-                          {a.resolved ? "Resolved" : "Active"}
+                          <MetricIcon className="w-2.5 h-2.5" />
+                          {a.metric}
                         </span>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                        {/* Resolved tag */}
+                        {a.resolved && (
+                          <span
+                            className="text-[9px] font-semibold px-1.5 py-0.5 rounded-full"
+                            style={{ background: "rgba(22,163,74,0.10)", color: "#16a34a", border: "1px solid rgba(22,163,74,0.25)" }}
+                          >
+                            Resolved
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-xs font-medium leading-relaxed" style={{ color: "var(--app-text-1)" }}>
+                        {a.threshold}
+                      </p>
+                      <div className="flex items-center gap-3 mt-1 flex-wrap">
+                        <span className="text-[10px]" style={{ color: "var(--app-text-3)" }}>
+                          {a.sensor}
+                        </span>
+                        <span
+                          className="text-[10px] font-semibold tabular-nums"
+                          style={{ color: sevColor, fontFamily: "DM Mono, monospace" }}
+                        >
+                          {a.value.toFixed(2)}{METRIC_UNITS[a.metric]}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Timestamp */}
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      <span
+                        className="text-[10px] font-medium tabular-nums"
+                        style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}
+                      >
+                        {relativeTime(a.timestamp)}
+                      </span>
+                      <span
+                        className="text-[9px] tabular-nums"
+                        style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}
+                      >
+                        {a.timestamp.toLocaleTimeString()}
+                      </span>
+                    </div>
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          )}
         </div>
-      </div>
+      </motion.div>
+
     </div>
   );
 }
