@@ -11,18 +11,25 @@ export interface AnomalyEvent {
   resolved: boolean;
 }
 
-const consecutiveCounts: Record<string, number> = {};
-
 function getSeverity(status: StatusType): "CRITICAL" | "HIGH" | "MEDIUM" | "LOW" {
   if (status === "DANGER") return "CRITICAL";
   return "HIGH";
 }
 
+const METRIC_UNITS: Record<MetricType, string> = {
+  pH: "",
+  Turbidity: " NTU",
+  Temperature: "°C",
+  DO: " mg/L",
+  TDS: " ppm",
+};
+
 export function checkAnomaly(
   sensor: string,
   metric: MetricType,
   value: number,
-  existingAnomalies: AnomalyEvent[]
+  existingAnomalies: AnomalyEvent[],
+  consecutiveCounts: Record<string, number>
 ): AnomalyEvent | null {
   const key = `${sensor}-${metric}`;
   const status = getStatus(metric, value);
@@ -41,22 +48,22 @@ export function checkAnomaly(
   );
   if (alreadyActive) return null;
 
-  const metricUnit: Record<MetricType, string> = {
-    pH: "",
-    Turbidity: " NTU",
-    Temperature: "°C",
-    DO: " mg/L",
-    TDS: " ppm",
-  };
-
   return {
     id: `${key}-${Date.now()}`,
     sensor,
     metric,
     value,
-    threshold: `${metric}: ${value.toFixed(2)}${metricUnit[metric]} — ${status}`,
+    threshold: `${metric}: ${value.toFixed(2)}${METRIC_UNITS[metric]} — ${status}`,
     severity: getSeverity(status),
     timestamp: new Date(),
     resolved: false,
   };
+}
+
+export function resetConsecutiveCount(
+  sensor: string,
+  metric: MetricType,
+  consecutiveCounts: Record<string, number>
+): void {
+  consecutiveCounts[`${sensor}-${metric}`] = 0;
 }

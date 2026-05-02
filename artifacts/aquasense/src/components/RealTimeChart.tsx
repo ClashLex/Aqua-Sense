@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { WifiOff } from "lucide-react";
 import {
   LineChart,
   Line,
@@ -32,9 +33,10 @@ const METRICS: MetricType[] = ["pH", "Turbidity", "Temperature", "DO", "TDS"];
 
 interface RealTimeChartProps {
   history: MetricHistory;
+  offline?: boolean;
 }
 
-export function RealTimeChart({ history }: RealTimeChartProps) {
+export function RealTimeChart({ history, offline = false }: RealTimeChartProps) {
   const [visible, setVisible] = useState<Record<MetricType, boolean>>({
     pH: true,
     Turbidity: true,
@@ -55,14 +57,23 @@ export function RealTimeChart({ history }: RealTimeChartProps) {
 
   return (
     <div
-      className="rounded-xl border p-4"
+      className="rounded-xl border p-4 relative"
       style={{
         background: "#0d1f3c",
-        borderColor: "rgba(0,245,255,0.15)",
+        borderColor: offline ? "rgba(71,85,105,0.3)" : "rgba(0,245,255,0.15)",
         boxShadow: "0 0 20px rgba(0,245,255,0.05)",
+        opacity: offline ? 0.6 : 1,
       }}
       data-testid="realtime-chart"
     >
+      {offline && (
+        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-[rgba(2,8,23,0.6)] z-10">
+          <div className="flex flex-col items-center gap-2 text-[#475569]">
+            <WifiOff className="w-8 h-8" />
+            <span className="text-xs font-mono tracking-widest">SENSOR OFFLINE</span>
+          </div>
+        </div>
+      )}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <span className="text-[#e2e8f0] text-xs font-mono tracking-widest uppercase mr-2">
           Live Metrics

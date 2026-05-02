@@ -8,7 +8,7 @@ import { Analytics } from "./pages/Analytics";
 import { Alerts } from "./pages/Alerts";
 import { Assistant } from "./pages/Assistant";
 import NotFound from "@/pages/not-found";
-import { useSensorData } from "./hooks/useSensorData";
+import { useSensorData, SensorDataProvider } from "./hooks/useSensorData";
 
 const queryClient = new QueryClient();
 
@@ -36,9 +36,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-          <AppShell />
-        </WouterRouter>
+        <SensorDataProvider>
+          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+            <AppShell />
+          </WouterRouter>
+        </SensorDataProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>
