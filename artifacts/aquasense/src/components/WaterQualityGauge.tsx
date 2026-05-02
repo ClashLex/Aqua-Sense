@@ -64,7 +64,7 @@ function scoreLabel(s: number): string {
 
 export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQualityGaugeProps) {
   const displayed = useSmoothedScore(offline ? 0 : score);
-  const color = offline ? "#cbd5e1" : scoreColor(displayed);
+  const color = offline ? "var(--app-border)" : scoreColor(displayed);
   const label = offline ? "Offline" : scoreLabel(displayed);
 
   const fillEndDeg = START_DEG + Math.max(displayed, 0.5) / 100 * TOTAL_SWEEP;
@@ -72,15 +72,19 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
 
   return (
     <div
-      className="rounded-xl border bg-white flex flex-col items-center p-3 shrink-0"
+      className="rounded-xl border flex flex-col items-center p-3 shrink-0"
       style={{
-        borderColor: "#e2e8f0",
+        background: "var(--app-surface)",
+        borderColor: "var(--app-border)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
         width: 168,
       }}
       data-testid="water-quality-gauge"
     >
-      <span className="text-[#94a3b8] text-[10px] font-medium tracking-wide uppercase mb-1">
+      <span
+        className="text-[10px] font-medium tracking-wide uppercase mb-1"
+        style={{ color: "var(--app-text-3)" }}
+      >
         Water Quality
       </span>
 
@@ -89,7 +93,7 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
         <path
           d={BG_PATH}
           fill="none"
-          stroke="#e2e8f0"
+          stroke="var(--app-border)"
           strokeWidth={SW}
           strokeLinecap="round"
         />
@@ -99,7 +103,7 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           <path
             d={fillPath}
             fill="none"
-            stroke={color}
+            stroke={offline ? "#94a3b8" : scoreColor(displayed)}
             strokeWidth={SW}
             strokeLinecap="round"
             style={{ transition: "stroke 0.6s ease" }}
@@ -111,7 +115,7 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           x={CX}
           y={CY + 10}
           textAnchor="middle"
-          fill={color}
+          fill={offline ? "#94a3b8" : scoreColor(displayed)}
           fontSize="32"
           fontFamily="DM Mono, monospace"
           fontWeight="500"
@@ -125,7 +129,7 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           x={CX}
           y={CY + 26}
           textAnchor="middle"
-          fill="#94a3b8"
+          fill="var(--app-text-3)"
           fontSize="9"
           fontFamily="DM Mono, monospace"
         >
@@ -137,7 +141,7 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           x={CX}
           y={CY + 42}
           textAnchor="middle"
-          fill={color}
+          fill={offline ? "#94a3b8" : scoreColor(displayed)}
           fontSize="9"
           fontFamily="Plus Jakarta Sans, sans-serif"
           fontWeight="700"
@@ -151,11 +155,14 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           const deg = START_DEG + (pct / 100) * TOTAL_SWEEP;
           const ix = CX + (R - SW / 2 - 2) * Math.cos(toRad(deg));
           const iy = CY + (R - SW / 2 - 2) * Math.sin(toRad(deg));
-          return <circle key={pct} cx={ix.toFixed(3)} cy={iy.toFixed(3)} r="1.5" fill="#cbd5e1" />;
+          return <circle key={pct} cx={ix.toFixed(3)} cy={iy.toFixed(3)} r="1.5" fill="var(--app-border)" />;
         })}
       </svg>
 
-      <span className="text-[#94a3b8] text-[9px] font-medium tracking-wide text-center leading-tight mt-0.5 px-1 truncate w-full">
+      <span
+        className="text-[9px] font-medium tracking-wide text-center leading-tight mt-0.5 px-1 truncate w-full"
+        style={{ color: "var(--app-text-3)" }}
+      >
         {sensorName}
       </span>
     </div>

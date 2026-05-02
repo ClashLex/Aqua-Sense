@@ -183,17 +183,17 @@ ${lines}`;
             className="w-[316px] md:w-[360px] flex flex-col rounded-2xl overflow-hidden"
             style={{
               height: "430px",
-              background: "rgba(255, 255, 255, 0.96)",
+              background: "var(--app-surface-glass)",
               backdropFilter: "blur(24px)",
               WebkitBackdropFilter: "blur(24px)",
-              border: "1px solid #e2e8f0",
+              border: "1px solid var(--app-border)",
               boxShadow: "0 20px 60px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.07)",
             }}
           >
             {/* Header */}
             <div
-              className="flex items-center justify-between px-4 py-2.5 shrink-0 border-b bg-[#f8fafc]"
-              style={{ borderColor: "#e2e8f0" }}
+              className="flex items-center justify-between px-4 py-2.5 shrink-0 border-b"
+              style={{ background: "var(--app-surface-2)", borderColor: "var(--app-border)" }}
             >
               <div className="flex items-center gap-2">
                 <motion.div
@@ -202,25 +202,27 @@ ${lines}`;
                   className="w-1.5 h-1.5 rounded-full bg-[#16a34a]"
                 />
                 <span
-                  style={{ fontFamily: "var(--app-font-display)" }}
-                  className="text-[#2563eb] text-[11px] font-bold tracking-wide"
+                  style={{ fontFamily: "var(--app-font-display)", color: "#2563eb" }}
+                  className="text-[11px] font-bold tracking-wide"
                 >
                   AquaSense Copilot
                 </span>
-                <span className="text-[#94a3b8] text-[9px]" style={{ fontFamily: "DM Mono, monospace" }}>claude</span>
+                <span className="text-[9px]" style={{ fontFamily: "DM Mono, monospace", color: "var(--app-text-3)" }}>claude</span>
               </div>
               <div className="flex items-center gap-3">
                 {messages.length > 0 && (
                   <button
                     onClick={clearChat}
-                    className="text-[#94a3b8] hover:text-[#64748b] text-[9px] font-medium transition-colors"
+                    className="text-[9px] font-medium transition-colors"
+                    style={{ color: "var(--app-text-3)" }}
                   >
                     clear
                   </button>
                 )}
                 <button
                   onClick={() => setIsOpen(false)}
-                  className="text-[#94a3b8] hover:text-[#0f172a] transition-colors"
+                  className="transition-colors"
+                  style={{ color: "var(--app-text-3)" }}
                 >
                   <ChevronDown className="w-4 h-4" />
                 </button>
@@ -237,14 +239,15 @@ ${lines}`;
                   <motion.div
                     animate={{ scale: [1, 1.07, 1] }}
                     transition={{ repeat: Infinity, duration: 3 }}
-                    className="w-10 h-10 rounded-full border border-[#bfdbfe] bg-[#eff6ff] flex items-center justify-center"
+                    className="w-10 h-10 rounded-full flex items-center justify-center"
+                    style={{ border: "1px solid var(--app-primary-tint-border)", background: "var(--app-primary-tint)" }}
                   >
                     <Bot className="w-5 h-5 text-[#2563eb]" />
                   </motion.div>
-                  <p className="text-[#64748b] text-[11px] leading-relaxed font-medium">
+                  <p className="text-[11px] leading-relaxed font-medium" style={{ color: "var(--app-text-2)" }}>
                     Quick questions, instant answers
                   </p>
-                  <p className="text-[#94a3b8] text-[10px]">
+                  <p className="text-[10px]" style={{ color: "var(--app-text-3)" }}>
                     Reading from {SENSORS[0]}
                   </p>
                 </div>
@@ -259,7 +262,10 @@ ${lines}`;
                     className={`flex gap-2 ${msg.role === "user" ? "justify-end" : "justify-start"}`}
                   >
                     {msg.role === "assistant" && (
-                      <div className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center mt-0.5 bg-[#eff6ff] border border-[#bfdbfe]">
+                      <div
+                        className="w-5 h-5 rounded-full shrink-0 flex items-center justify-center mt-0.5"
+                        style={{ background: "var(--app-primary-tint)", border: "1px solid var(--app-primary-tint-border)" }}
+                      >
                         <Bot className="w-3 h-3 text-[#2563eb]" />
                       </div>
                     )}
@@ -268,14 +274,14 @@ ${lines}`;
                       style={
                         msg.role === "user"
                           ? {
-                              background: "#eff6ff",
-                              border: "1px solid #bfdbfe",
-                              color: "#0f172a",
+                              background: "var(--app-primary-tint)",
+                              border: "1px solid var(--app-primary-tint-border)",
+                              color: "var(--app-text-1)",
                             }
                           : {
-                              background: "#ffffff",
-                              border: "1px solid #e2e8f0",
-                              color: "#374151",
+                              background: "var(--app-surface)",
+                              border: "1px solid var(--app-border)",
+                              color: "var(--app-text-4)",
                             }
                       }
                     >
@@ -292,17 +298,18 @@ ${lines}`;
                 ))}
               </AnimatePresence>
 
-              {/* Typing dots */}
               {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
-                <motion.div
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  className="flex gap-2"
-                >
-                  <div className="w-5 h-5 rounded-full flex items-center justify-center bg-[#eff6ff] border border-[#bfdbfe]">
+                <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-2">
+                  <div
+                    className="w-5 h-5 rounded-full flex items-center justify-center"
+                    style={{ background: "var(--app-primary-tint)", border: "1px solid var(--app-primary-tint-border)" }}
+                  >
                     <Bot className="w-3 h-3 text-[#2563eb]" />
                   </div>
-                  <div className="rounded-xl px-3 py-2 flex items-center gap-1 bg-white border border-[#e2e8f0]">
+                  <div
+                    className="rounded-xl px-3 py-2 flex items-center gap-1"
+                    style={{ background: "var(--app-surface)", border: "1px solid var(--app-border)" }}
+                  >
                     {[0, 1, 2].map((i) => (
                       <motion.div
                         key={i}
@@ -331,7 +338,18 @@ ${lines}`;
                   key={p}
                   onClick={() => sendMessage(p)}
                   disabled={isTyping}
-                  className="px-2.5 py-1 rounded-full text-[9px] font-medium border border-[#e2e8f0] text-[#64748b] transition-all hover:bg-[#eff6ff] hover:text-[#2563eb] hover:border-[#bfdbfe] disabled:opacity-40"
+                  className="px-2.5 py-1 rounded-full text-[9px] font-medium transition-all disabled:opacity-40"
+                  style={{ border: "1px solid var(--app-border)", color: "var(--app-text-2)" }}
+                  onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "var(--app-primary-tint)";
+                    (e.currentTarget as HTMLElement).style.color = "#2563eb";
+                    (e.currentTarget as HTMLElement).style.borderColor = "var(--app-primary-tint-border)";
+                  }}
+                  onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.background = "";
+                    (e.currentTarget as HTMLElement).style.color = "var(--app-text-2)";
+                    (e.currentTarget as HTMLElement).style.borderColor = "var(--app-border)";
+                  }}
                 >
                   {p}
                 </button>
@@ -340,8 +358,8 @@ ${lines}`;
 
             {/* Input */}
             <div
-              className="shrink-0 flex gap-2 items-center mx-3 my-2.5 rounded-xl border px-3 py-2 bg-white"
-              style={{ borderColor: "#e2e8f0" }}
+              className="shrink-0 flex gap-2 items-center mx-3 my-2.5 rounded-xl border px-3 py-2"
+              style={{ background: "var(--app-surface)", borderColor: "var(--app-border)" }}
             >
               <input
                 ref={inputRef}
@@ -350,7 +368,8 @@ ${lines}`;
                 onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage(input)}
                 placeholder="Ask a quick question..."
                 disabled={isTyping}
-                className="flex-1 bg-transparent text-[#0f172a] text-[11px] placeholder:text-[#cbd5e1] outline-none disabled:opacity-50"
+                className="flex-1 bg-transparent text-[11px] outline-none disabled:opacity-50"
+                style={{ color: "var(--app-text-1)" }}
               />
               <button
                 onClick={() => sendMessage(input)}
@@ -372,9 +391,9 @@ ${lines}`;
         className="relative flex items-center gap-2 pl-4 pr-5 py-3 rounded-full"
         style={{
           background: isOpen
-            ? "#eff6ff"
+            ? "var(--app-primary-tint)"
             : "linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%)",
-          border: `1px solid ${isOpen ? "#bfdbfe" : "transparent"}`,
+          border: `1px solid ${isOpen ? "var(--app-primary-tint-border)" : "transparent"}`,
           color: isOpen ? "#2563eb" : "#ffffff",
           boxShadow: isOpen
             ? "0 2px 8px rgba(37,99,235,0.18)"
@@ -407,14 +426,10 @@ ${lines}`;
             </motion.span>
           )}
         </AnimatePresence>
-        <span
-          className="text-[11px] font-semibold"
-          style={{ fontFamily: "var(--app-font-display)" }}
-        >
+        <span className="text-[11px] font-semibold" style={{ fontFamily: "var(--app-font-display)" }}>
           {isOpen ? "Close" : "Ask AI"}
         </span>
 
-        {/* Unread badge */}
         {!isOpen && answerCount > 0 && (
           <motion.span
             initial={{ scale: 0 }}
@@ -425,7 +440,6 @@ ${lines}`;
           </motion.span>
         )}
 
-        {/* Pulse ring when closed */}
         {!isOpen && (
           <motion.span
             className="absolute inset-0 rounded-full border border-[rgba(37,99,235,0.4)]"

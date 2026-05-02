@@ -6,6 +6,7 @@ import {
 } from "recharts";
 import { MetricType } from "../utils/thresholds";
 import { MetricHistory } from "../hooks/useSensorData";
+import { useTheme } from "../contexts/ThemeContext";
 
 const METRIC_COLORS: Record<MetricType, string> = {
   pH: "#2563eb",
@@ -31,6 +32,9 @@ interface RealTimeChartProps {
 }
 
 export function RealTimeChart({ history, offline = false }: RealTimeChartProps) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [visible, setVisible] = useState<Record<MetricType, boolean>>({
     pH: true, Turbidity: true, Temperature: true, DO: true, TDS: false,
   });
@@ -44,19 +48,26 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
   const toggleMetric = (m: MetricType) =>
     setVisible((prev) => ({ ...prev, [m]: !prev[m] }));
 
+  const tickColor = isDark ? "#64748b" : "#94a3b8";
+  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
+
   return (
     <div
-      className="rounded-xl border bg-white p-4 relative"
+      className="rounded-xl border p-4 relative"
       style={{
-        borderColor: "#e2e8f0",
+        background: "var(--app-surface)",
+        borderColor: "var(--app-border)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
         opacity: offline ? 0.6 : 1,
       }}
       data-testid="realtime-chart"
     >
       {offline && (
-        <div className="absolute inset-0 flex items-center justify-center rounded-xl bg-white/75 z-10">
-          <div className="flex flex-col items-center gap-2 text-[#94a3b8]">
+        <div
+          className="absolute inset-0 flex items-center justify-center rounded-xl z-10"
+          style={{ background: "var(--app-surface)", opacity: 0.75 }}
+        >
+          <div className="flex flex-col items-center gap-2" style={{ color: "var(--app-text-3)" }}>
             <WifiOff className="w-8 h-8" />
             <span className="text-xs font-medium tracking-wide">Sensor Offline</span>
           </div>
@@ -64,7 +75,7 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
       )}
 
       <div className="flex flex-wrap items-center gap-2 mb-4">
-        <span className="text-[#0f172a] text-sm font-semibold mr-1">
+        <span className="text-sm font-semibold mr-1" style={{ color: "var(--app-text-1)" }}>
           Live Metrics
         </span>
         {METRICS.map((m) => (
@@ -73,15 +84,15 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
             onClick={() => toggleMetric(m)}
             className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium transition-all border"
             style={{
-              borderColor: visible[m] ? METRIC_COLORS[m] + "50" : "#e2e8f0",
+              borderColor: visible[m] ? METRIC_COLORS[m] + "50" : "var(--app-border)",
               background: visible[m] ? METRIC_COLORS[m] + "10" : "transparent",
-              color: visible[m] ? METRIC_COLORS[m] : "#94a3b8",
+              color: visible[m] ? METRIC_COLORS[m] : "var(--app-text-3)",
             }}
             data-testid={`toggle-metric-${m.toLowerCase()}`}
           >
             <span
               className="w-2 h-2 rounded-full"
-              style={{ backgroundColor: visible[m] ? METRIC_COLORS[m] : "#cbd5e1" }}
+              style={{ backgroundColor: visible[m] ? METRIC_COLORS[m] : "var(--app-border)" }}
             />
             {m}
           </button>
@@ -90,30 +101,30 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
 
       <ResponsiveContainer width="100%" height={260}>
         <LineChart data={data} margin={{ top: 5, right: 5, bottom: 20, left: -20 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.05)" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke={gridColor} vertical={false} />
           <XAxis
             dataKey="t"
-            tick={{ fill: "#94a3b8", fontSize: 10, fontFamily: "DM Mono" }}
+            tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono" }}
             tickLine={false}
-            axisLine={{ stroke: "#e2e8f0" }}
-            label={{ value: "Time (5s intervals)", position: "insideBottom", fill: "#94a3b8", fontSize: 10, fontFamily: "DM Mono", offset: -10 }}
+            axisLine={{ stroke: "var(--app-border)" }}
+            label={{ value: "Time (5s intervals)", position: "insideBottom", fill: tickColor, fontSize: 10, fontFamily: "DM Mono", offset: -10 }}
           />
           <YAxis
-            tick={{ fill: "#94a3b8", fontSize: 10, fontFamily: "DM Mono" }}
+            tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono" }}
             tickLine={false}
             axisLine={false}
           />
           <Tooltip
             contentStyle={{
-              background: "#ffffff",
-              border: "1px solid #e2e8f0",
+              background: isDark ? "#1e293b" : "#ffffff",
+              border: `1px solid ${isDark ? "#334155" : "#e2e8f0"}`,
               borderRadius: 8,
               fontFamily: "DM Mono, monospace",
               fontSize: 11,
-              color: "#0f172a",
+              color: isDark ? "#f1f5f9" : "#0f172a",
               boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
             }}
-            labelStyle={{ color: "#64748b", marginBottom: 4 }}
+            labelStyle={{ color: tickColor, marginBottom: 4 }}
             labelFormatter={(v) => `T-${(60 - Number(v)) * 5}s`}
           />
           {METRICS.map((m) =>

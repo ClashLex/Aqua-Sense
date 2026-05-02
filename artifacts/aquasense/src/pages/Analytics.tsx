@@ -9,6 +9,7 @@ import { ClipboardCopy, Check, ChevronUp, ChevronDown, ChevronsUpDown } from "lu
 import { useSensorData, SENSORS, SensorName } from "../hooks/useSensorData";
 import { MetricType, StatusType } from "../utils/thresholds";
 import { predictNext } from "../utils/linearRegression";
+import { useTheme } from "../contexts/ThemeContext";
 
 // ── Constants ──────────────────────────────────────────────────────────────
 
@@ -127,6 +128,9 @@ function SortIcon({ col, active, dir }: { col: SortCol; active: SortCol; dir: So
 
 export function Analytics() {
   const { currentReadings, history, anomalies } = useSensorData();
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+
   const [range, setRange] = useState<TimeRange>("1hr");
   const [activeSensor, setActiveSensor] = useState<SensorName>(SENSORS[0]);
   const [sortCol, setSortCol] = useState<SortCol>("timestamp");
@@ -149,6 +153,9 @@ export function Analytics() {
     const h = (now.getHours() - 23 + i + 24) % 24;
     return h.toString().padStart(2, "0");
   });
+
+  const tickColor = isDark ? "#64748b" : "#94a3b8";
+  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)";
 
   const handleSort = (col: SortCol) => {
     if (col === sortCol) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
@@ -192,21 +199,31 @@ export function Analytics() {
     { key: "status", label: "Status" },
   ];
 
+  const tooltipStyle = {
+    background: isDark ? "#1e293b" : "#ffffff",
+    border: `1px solid ${isDark ? "#334155" : "#e2e8f0"}`,
+    borderRadius: 6,
+    fontSize: 10,
+    fontFamily: "DM Mono",
+    color: isDark ? "#f1f5f9" : "#0f172a",
+    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+  };
+
   return (
     <div className="space-y-6" data-testid="analytics-page">
 
       {/* ── Header row ─────────────────────────────────────────────────── */}
       <div className="flex flex-wrap items-center gap-2">
-        <span className="text-[#64748b] text-xs font-medium">Sensor:</span>
+        <span className="text-xs font-medium" style={{ color: "var(--app-text-2)" }}>Sensor:</span>
         {SENSORS.map((s) => (
           <button
             key={s}
             onClick={() => setActiveSensor(s)}
             className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
             style={{
-              borderColor: activeSensor === s ? "#93c5fd" : "#e2e8f0",
-              background: activeSensor === s ? "#eff6ff" : "transparent",
-              color: activeSensor === s ? "#2563eb" : "#64748b",
+              borderColor: activeSensor === s ? "var(--app-primary-tint-border)" : "var(--app-border)",
+              background: activeSensor === s ? "var(--app-primary-tint)" : "transparent",
+              color: activeSensor === s ? "#2563eb" : "var(--app-text-2)",
             }}
             data-testid={`sensor-tab-${s.replace(/\s+/g, "-").toLowerCase()}`}
           >
@@ -221,9 +238,9 @@ export function Analytics() {
               onClick={() => setRange(r)}
               className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
               style={{
-                borderColor: range === r ? "#93c5fd" : "#e2e8f0",
-                background: range === r ? "#eff6ff" : "transparent",
-                color: range === r ? "#2563eb" : "#64748b",
+                borderColor: range === r ? "var(--app-primary-tint-border)" : "var(--app-border)",
+                background: range === r ? "var(--app-primary-tint)" : "transparent",
+                color: range === r ? "#2563eb" : "var(--app-text-2)",
               }}
               data-testid={`time-range-${r}`}
             >
@@ -235,9 +252,9 @@ export function Analytics() {
             onClick={handleExport}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
             style={{
-              borderColor: copied ? "#bbf7d0" : "#e2e8f0",
+              borderColor: copied ? "#bbf7d0" : "var(--app-border)",
               background: copied ? "#f0fdf4" : "transparent",
-              color: copied ? "#16a34a" : "#64748b",
+              color: copied ? "#16a34a" : "var(--app-text-2)",
             }}
             data-testid="export-report-btn"
           >
@@ -254,11 +271,11 @@ export function Analytics() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="rounded-xl border bg-white p-4 flex flex-col items-center justify-center"
-          style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+          className="rounded-xl border p-4 flex flex-col items-center justify-center"
+          style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
           data-testid="quality-score-gauge"
         >
-          <span className="text-[#64748b] text-[10px] font-medium tracking-wide uppercase mb-3">
+          <span className="text-[10px] font-medium tracking-wide uppercase mb-3" style={{ color: "var(--app-text-2)" }}>
             Water Quality Score
           </span>
           <div className="relative">
@@ -272,7 +289,7 @@ export function Analytics() {
               endAngle={-270}
             >
               <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-              <RadialBar dataKey="value" cornerRadius={4} background={{ fill: "rgba(0,0,0,0.05)" }} />
+              <RadialBar dataKey="value" cornerRadius={4} background={{ fill: isDark ? "rgba(255,255,255,0.06)" : "rgba(0,0,0,0.05)" }} />
             </RadialBarChart>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
               <span className="text-3xl font-semibold" style={{ color: scoreColor, fontFamily: "DM Mono, monospace" }}>
@@ -284,19 +301,18 @@ export function Analytics() {
           <span className="text-sm font-semibold mt-1" style={{ color: scoreColor, fontFamily: "var(--app-font-display)" }}>
             {scoreLabel2}
           </span>
-          {/* Forecast legend */}
-          <div className="mt-4 flex flex-col gap-1.5 w-full border-t border-[#f1f5f9] pt-3">
+          <div className="mt-4 flex flex-col gap-1.5 w-full pt-3" style={{ borderTop: "1px solid var(--app-border-subtle)" }}>
             <div className="flex items-center gap-2">
               <svg width="20" height="4" className="shrink-0">
                 <line x1="0" y1="2" x2="20" y2="2" stroke="#2563eb" strokeWidth="1.5" />
               </svg>
-              <span className="text-[9px] text-[#64748b] tracking-wider font-medium">ACTUAL DATA</span>
+              <span className="text-[9px] tracking-wider font-medium" style={{ color: "var(--app-text-2)" }}>ACTUAL DATA</span>
             </div>
             <div className="flex items-center gap-2">
               <svg width="20" height="4" className="shrink-0">
                 <line x1="0" y1="2" x2="20" y2="2" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.5" />
               </svg>
-              <span className="text-[9px] text-[#64748b] tracking-wider font-medium">2HR FORECAST</span>
+              <span className="text-[9px] tracking-wider font-medium" style={{ color: "var(--app-text-2)" }}>2HR FORECAST</span>
             </div>
           </div>
         </motion.div>
@@ -324,8 +340,8 @@ export function Analytics() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="rounded-xl border bg-white p-3"
-                style={{ borderColor: `${color}30`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+                className="rounded-xl border p-3"
+                style={{ background: "var(--app-surface)", borderColor: `${color}30`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
                 data-testid={`metric-chart-${metric.toLowerCase()}`}
               >
                 <div className="flex items-center justify-between mb-2">
@@ -342,12 +358,12 @@ export function Analytics() {
 
                 <ResponsiveContainer width="100%" height={110}>
                   <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -28 }}>
-                    <CartesianGrid strokeDasharray="2 2" stroke="rgba(0,0,0,0.05)" vertical={false} />
+                    <CartesianGrid strokeDasharray="2 2" stroke={gridColor} vertical={false} />
                     <XAxis
                       dataKey="i"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: "#94a3b8", fontSize: 8, fontFamily: "DM Mono" }}
+                      tick={{ fill: tickColor, fontSize: 8, fontFamily: "DM Mono" }}
                       tickFormatter={(v) => {
                         if (v === 0) return "─2hr";
                         if (v === pivot) return "now";
@@ -357,21 +373,13 @@ export function Analytics() {
                       ticks={[0, pivot, values.length + 29]}
                     />
                     <YAxis
-                      tick={{ fill: "#94a3b8", fontSize: 9, fontFamily: "DM Mono" }}
+                      tick={{ fill: tickColor, fontSize: 9, fontFamily: "DM Mono" }}
                       tickLine={false}
                       axisLine={false}
                       width={28}
                     />
                     <Tooltip
-                      contentStyle={{
-                        background: "#ffffff",
-                        border: `1px solid ${color}30`,
-                        borderRadius: 6,
-                        fontSize: 10,
-                        fontFamily: "DM Mono",
-                        color: "#0f172a",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-                      }}
+                      contentStyle={{ ...tooltipStyle, border: `1px solid ${color}30` }}
                       formatter={(v: number, name: string) => [
                         `${v}${METRIC_UNITS[metric]}`,
                         name === "pred" ? "Forecast" : "Actual",
@@ -388,40 +396,20 @@ export function Analytics() {
 
                     <ReferenceLine
                       x={pivot}
-                      stroke="rgba(0,0,0,0.12)"
+                      stroke={isDark ? "rgba(255,255,255,0.12)" : "rgba(0,0,0,0.12)"}
                       strokeDasharray="3 2"
                       label={{
                         value: "NOW",
                         position: "insideTopLeft",
-                        fill: "#94a3b8",
+                        fill: tickColor,
                         fontSize: 8,
                         fontFamily: "DM Mono",
                         dy: -2,
                       }}
                     />
 
-                    <Line
-                      type="monotone"
-                      dataKey="actual"
-                      stroke={color}
-                      strokeWidth={1.5}
-                      dot={false}
-                      isAnimationActive={false}
-                      connectNulls={false}
-                      name="actual"
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="pred"
-                      stroke={color}
-                      strokeWidth={1.2}
-                      strokeDasharray="5 3"
-                      dot={false}
-                      isAnimationActive={false}
-                      connectNulls={true}
-                      opacity={0.55}
-                      name="pred"
-                    />
+                    <Line type="monotone" dataKey="actual" stroke={color} strokeWidth={1.5} dot={false} isAnimationActive={false} connectNulls={false} name="actual" />
+                    <Line type="monotone" dataKey="pred" stroke={color} strokeWidth={1.2} strokeDasharray="5 3" dot={false} isAnimationActive={false} connectNulls={true} opacity={0.55} name="pred" />
                   </LineChart>
                 </ResponsiveContainer>
               </motion.div>
@@ -435,25 +423,22 @@ export function Analytics() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-xl border bg-white p-4"
-        style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+        className="rounded-xl border p-4"
+        style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
         data-testid="anomaly-heatmap"
       >
         <div className="flex flex-wrap items-center gap-4 mb-4">
-          <span className="text-[#0f172a] text-sm font-semibold">
+          <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>
             24-Hour Anomaly Heatmap
           </span>
-          <span className="text-[#64748b] text-xs">{activeSensor}</span>
+          <span className="text-xs" style={{ color: "var(--app-text-2)" }}>{activeSensor}</span>
 
           <div className="ml-auto flex items-center gap-4">
             {(["SAFE", "WARNING", "DANGER"] as StatusType[]).map((s) => {
               const c = s === "SAFE" ? "#16a34a" : s === "WARNING" ? "#d97706" : "#dc2626";
               return (
                 <div key={s} className="flex items-center gap-1.5">
-                  <div
-                    className="w-3 h-3 rounded-sm"
-                    style={{ background: `${c}25`, border: `1px solid ${c}45` }}
-                  />
+                  <div className="w-3 h-3 rounded-sm" style={{ background: `${c}25`, border: `1px solid ${c}45` }} />
                   <span className="text-[9px] font-medium tracking-wider" style={{ color: c }}>{s}</span>
                 </div>
               );
@@ -463,41 +448,26 @@ export function Analytics() {
 
         <div className="overflow-x-auto">
           <div style={{ minWidth: 560 }}>
-            {/* Hour labels */}
             <div className="flex mb-1">
               <div className="shrink-0" style={{ width: 86 }} />
               {hourLabels.map((h, i) => (
                 <div
                   key={i}
                   className="flex-1 text-center"
-                  style={{
-                    fontSize: 8,
-                    fontFamily: "DM Mono",
-                    color: i === 23 ? "#2563eb" : "#94a3b8",
-                    fontWeight: i === 23 ? 700 : 400,
-                    minWidth: 20,
-                  }}
+                  style={{ fontSize: 8, fontFamily: "DM Mono", color: i === 23 ? "#2563eb" : tickColor, fontWeight: i === 23 ? 700 : 400, minWidth: 20 }}
                 >
                   {h}
                 </div>
               ))}
             </div>
 
-            {/* Metric rows */}
             {METRICS.map((metric, mi) => {
               const mColor = METRIC_COLORS[metric];
               return (
                 <div key={metric} className="flex items-center mb-1.5">
                   <div
                     className="shrink-0 text-right pr-3"
-                    style={{
-                      width: 86,
-                      fontSize: 9,
-                      fontFamily: "DM Mono",
-                      color: mColor,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.06em",
-                    }}
+                    style={{ width: 86, fontSize: 9, fontFamily: "DM Mono", color: mColor, textTransform: "uppercase", letterSpacing: "0.06em" }}
                   >
                     {metric}
                   </div>
@@ -527,15 +497,12 @@ export function Analytics() {
               );
             })}
 
-            {/* "NOW" marker row */}
             <div className="flex mt-0.5">
               <div className="shrink-0" style={{ width: 86 }} />
               {hourLabels.map((_, i) => (
                 <div key={i} className="flex-1 text-center" style={{ minWidth: 20 }}>
                   {i === 23 && (
-                    <span style={{ fontSize: 7, color: "#2563eb", fontFamily: "DM Mono", letterSpacing: 1 }}>
-                      NOW
-                    </span>
+                    <span style={{ fontSize: 7, color: "#2563eb", fontFamily: "DM Mono", letterSpacing: 1 }}>NOW</span>
                   )}
                 </div>
               ))}
@@ -546,31 +513,34 @@ export function Analytics() {
 
       {/* ── Sortable anomaly history table ─────────────────────────────── */}
       <div
-        className="rounded-xl border bg-white overflow-hidden"
-        style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
+        className="rounded-xl border overflow-hidden"
+        style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
         data-testid="anomaly-history-table"
       >
-        <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
-          <span className="text-[#0f172a] text-sm font-semibold">
+        <div
+          className="px-4 py-3 flex items-center justify-between"
+          style={{ borderBottom: "1px solid var(--app-border-subtle)" }}
+        >
+          <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>
             Anomaly History
           </span>
-          <span className="text-[#94a3b8] text-xs">
+          <span className="text-xs" style={{ color: "var(--app-text-3)" }}>
             {anomalies.length} record{anomalies.length !== 1 ? "s" : ""} — click headers to sort
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[#f1f5f9]">
+              <tr style={{ borderBottom: "1px solid var(--app-border-subtle)" }}>
                 {TABLE_COLS.map(({ key, label }) => (
                   <th
                     key={key}
                     onClick={() => handleSort(key)}
                     className="px-4 py-2.5 text-left uppercase text-[10px] cursor-pointer select-none transition-colors"
-                    style={{ color: sortCol === key ? "#2563eb" : "#94a3b8", fontFamily: "DM Mono" }}
+                    style={{ color: sortCol === key ? "#2563eb" : "var(--app-text-3)", fontFamily: "DM Mono" }}
                     data-testid={`sort-col-${key}`}
                   >
-                    <span className="inline-flex items-center gap-0.5 hover:text-[#0f172a] transition-colors">
+                    <span className="inline-flex items-center gap-0.5">
                       {label}
                       <SortIcon col={key} active={sortCol} dir={sortDir} />
                     </span>
@@ -581,7 +551,7 @@ export function Analytics() {
             <tbody>
               {sortedAnomalies.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[#94a3b8] text-xs">
+                  <td colSpan={6} className="px-4 py-8 text-center text-xs" style={{ color: "var(--app-text-3)" }}>
                     No anomalies recorded
                   </td>
                 </tr>
@@ -591,18 +561,23 @@ export function Analytics() {
                   return (
                     <tr
                       key={a.id}
-                      className="border-b border-[#f8fafc] hover:bg-[#f8fafc] transition-colors"
-                      style={{ background: a.resolved ? "transparent" : `${sevColor}06` }}
+                      className="transition-colors"
+                      style={{
+                        borderBottom: "1px solid var(--app-border-subtle)",
+                        background: a.resolved ? "transparent" : `${sevColor}06`,
+                      }}
+                      onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "var(--app-surface-2)"; }}
+                      onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = a.resolved ? "transparent" : `${sevColor}06`; }}
                       data-testid={`anomaly-row-${a.id}`}
                     >
-                      <td className="px-4 py-2.5 text-[#64748b] tabular-nums" style={{ fontFamily: "DM Mono" }}>
+                      <td className="px-4 py-2.5 tabular-nums" style={{ color: "var(--app-text-2)", fontFamily: "DM Mono" }}>
                         {a.timestamp.toLocaleTimeString()}
                       </td>
-                      <td className="px-4 py-2.5 text-[#374151]">{a.sensor}</td>
+                      <td className="px-4 py-2.5" style={{ color: "var(--app-text-4)" }}>{a.sensor}</td>
                       <td className="px-4 py-2.5 font-medium" style={{ color: METRIC_COLORS[a.metric] }}>
                         {a.metric}
                       </td>
-                      <td className="px-4 py-2.5 text-[#0f172a] tabular-nums" style={{ fontFamily: "DM Mono" }}>
+                      <td className="px-4 py-2.5 tabular-nums" style={{ color: "var(--app-text-1)", fontFamily: "DM Mono" }}>
                         {a.value.toFixed(2)}{METRIC_UNITS[a.metric]}
                       </td>
                       <td className="px-4 py-2.5">

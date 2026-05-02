@@ -26,13 +26,13 @@ export function Alerts() {
   return (
     <div className="space-y-4" data-testid="alerts-page">
       {/* Tabs */}
-      <div className="flex gap-1 border-b border-[#e2e8f0]">
+      <div className="flex gap-1" style={{ borderBottom: "1px solid var(--app-border)" }}>
         {(["active", "rules", "log"] as const).map((t) => (
           <button
             key={t}
             onClick={() => setTab(t)}
             className="pb-3 px-4 text-sm font-medium transition-colors relative"
-            style={{ color: tab === t ? "#2563eb" : "#64748b" }}
+            style={{ color: tab === t ? "#2563eb" : "var(--app-text-2)" }}
             data-testid={`alerts-tab-${t}`}
           >
             {t === "active" && active.length > 0 && (
@@ -60,7 +60,7 @@ export function Alerts() {
             >
               <Shield className="w-8 h-8 text-[#16a34a] mx-auto mb-2" />
               <p className="text-[#16a34a] font-semibold text-sm">All Systems Nominal</p>
-              <p className="text-[#64748b] text-xs mt-1">No active alerts</p>
+              <p className="text-xs mt-1" style={{ color: "var(--app-text-2)" }}>No active alerts</p>
             </motion.div>
           ) : (
             <AnimatePresence>
@@ -73,8 +73,9 @@ export function Alerts() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, x: 16 }}
                     transition={{ delay: i * 0.04 }}
-                    className="rounded-xl border p-4 bg-white"
+                    className="rounded-xl border p-4"
                     style={{
+                      background: "var(--app-surface)",
                       borderColor: sev.border,
                       boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
                       borderLeft: `3px solid ${sev.text}`,
@@ -90,14 +91,14 @@ export function Alerts() {
                           >
                             {alert.severity}
                           </span>
-                          <span className="text-[#64748b] text-xs">{alert.sensor}</span>
-                          <span className="text-[#94a3b8] text-xs ml-auto flex items-center gap-1">
+                          <span className="text-xs" style={{ color: "var(--app-text-2)" }}>{alert.sensor}</span>
+                          <span className="text-xs ml-auto flex items-center gap-1" style={{ color: "var(--app-text-3)" }}>
                             <Clock className="w-3 h-3" />
                             {alert.timestamp.toLocaleTimeString()}
                           </span>
                         </div>
-                        <p className="text-[#0f172a] text-sm font-medium">{alert.threshold}</p>
-                        <p className="text-[#64748b] text-xs mt-0.5" style={{ fontFamily: "var(--app-font-mono)" }}>
+                        <p className="text-sm font-medium" style={{ color: "var(--app-text-1)" }}>{alert.threshold}</p>
+                        <p className="text-xs mt-0.5" style={{ fontFamily: "var(--app-font-mono)", color: "var(--app-text-2)" }}>
                           Value: <span style={{ color: sev.text }}>{alert.value.toFixed(2)}</span>
                         </p>
                       </div>
@@ -122,7 +123,7 @@ export function Alerts() {
       {/* Alert Rules */}
       {tab === "rules" && (
         <div className="space-y-3" data-testid="alert-rules">
-          <p className="text-[#64748b] text-sm">Configured thresholds for the anomaly detection engine.</p>
+          <p className="text-sm" style={{ color: "var(--app-text-2)" }}>Configured thresholds for the anomaly detection engine.</p>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
             {METRICS.map((metric, i) => {
               const t = THRESHOLDS[metric];
@@ -132,8 +133,12 @@ export function Alerts() {
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="rounded-xl border bg-white p-4"
-                  style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+                  className="rounded-xl border p-4"
+                  style={{
+                    background: "var(--app-surface)",
+                    borderColor: "var(--app-border)",
+                    boxShadow: "0 1px 3px rgba(0,0,0,0.04)",
+                  }}
                   data-testid={`rule-card-${metric.toLowerCase()}`}
                 >
                   <span className="text-[#2563eb] text-sm font-semibold block mb-3">
@@ -142,31 +147,34 @@ export function Alerts() {
                   <div className="space-y-1.5">
                     {t.minDanger !== undefined && (
                       <div className="flex justify-between">
-                        <span className="text-[#64748b] text-xs">Min Danger</span>
-                        <span className="text-[#dc2626] text-xs font-mono">&lt; {t.minDanger}</span>
+                        <span className="text-xs" style={{ color: "var(--app-text-2)" }}>Min Danger</span>
+                        <span className="text-xs font-mono text-[#dc2626]">&lt; {t.minDanger}</span>
                       </div>
                     )}
                     {t.minWarning !== undefined && (
                       <div className="flex justify-between">
-                        <span className="text-[#64748b] text-xs">Min Warning</span>
-                        <span className="text-[#d97706] text-xs font-mono">&lt; {t.minWarning}</span>
+                        <span className="text-xs" style={{ color: "var(--app-text-2)" }}>Min Warning</span>
+                        <span className="text-xs font-mono text-[#d97706]">&lt; {t.minWarning}</span>
                       </div>
                     )}
                     {t.maxWarning !== undefined && (
                       <div className="flex justify-between">
-                        <span className="text-[#64748b] text-xs">Max Warning</span>
-                        <span className="text-[#d97706] text-xs font-mono">&gt; {t.maxWarning}</span>
+                        <span className="text-xs" style={{ color: "var(--app-text-2)" }}>Max Warning</span>
+                        <span className="text-xs font-mono text-[#d97706]">&gt; {t.maxWarning}</span>
                       </div>
                     )}
                     {t.maxDanger !== undefined && (
                       <div className="flex justify-between">
-                        <span className="text-[#64748b] text-xs">Max Danger</span>
-                        <span className="text-[#dc2626] text-xs font-mono">&gt; {t.maxDanger}</span>
+                        <span className="text-xs" style={{ color: "var(--app-text-2)" }}>Max Danger</span>
+                        <span className="text-xs font-mono text-[#dc2626]">&gt; {t.maxDanger}</span>
                       </div>
                     )}
-                    <div className="flex justify-between mt-2 pt-2 border-t border-[#f1f5f9]">
-                      <span className="text-[#64748b] text-xs">Trigger</span>
-                      <span className="text-[#16a34a] text-xs font-mono">3+ readings</span>
+                    <div
+                      className="flex justify-between mt-2 pt-2"
+                      style={{ borderTop: "1px solid var(--app-border-subtle)" }}
+                    >
+                      <span className="text-xs" style={{ color: "var(--app-text-2)" }}>Trigger</span>
+                      <span className="text-xs font-mono text-[#16a34a]">3+ readings</span>
                     </div>
                   </div>
                 </motion.div>
@@ -180,7 +188,7 @@ export function Alerts() {
       {tab === "log" && (
         <div className="space-y-2" data-testid="notification-log">
           {anomalies.length === 0 ? (
-            <p className="text-[#94a3b8] text-sm text-center py-8">No alerts logged yet</p>
+            <p className="text-sm text-center py-8" style={{ color: "var(--app-text-3)" }}>No alerts logged yet</p>
           ) : (
             [...anomalies].reverse().map((alert, i) => {
               const sev = SEV_COLORS[alert.severity] ?? SEV_COLORS.MEDIUM;
@@ -190,15 +198,21 @@ export function Alerts() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ delay: i * 0.02 }}
-                  className="flex items-start gap-3 py-3 px-4 rounded-lg border bg-white"
-                  style={{ borderColor: "#f1f5f9", boxShadow: "0 1px 2px rgba(0,0,0,0.03)" }}
+                  className="flex items-start gap-3 py-3 px-4 rounded-lg border"
+                  style={{
+                    background: "var(--app-surface)",
+                    borderColor: "var(--app-border-subtle)",
+                    boxShadow: "0 1px 2px rgba(0,0,0,0.03)",
+                  }}
                   data-testid={`log-entry-${alert.id}`}
                 >
                   <div className="w-0.5 self-stretch rounded-full shrink-0" style={{ backgroundColor: sev.text }} />
                   <Bell className="w-3.5 h-3.5 mt-0.5 shrink-0" style={{ color: sev.text }} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-[#0f172a] text-xs font-medium">{alert.threshold}</p>
-                    <p className="text-[#94a3b8] text-[10px] mt-0.5 font-mono">{alert.sensor} · {alert.timestamp.toLocaleString()}</p>
+                    <p className="text-xs font-medium" style={{ color: "var(--app-text-1)" }}>{alert.threshold}</p>
+                    <p className="text-[10px] mt-0.5 font-mono" style={{ color: "var(--app-text-3)" }}>
+                      {alert.sensor} · {alert.timestamp.toLocaleString()}
+                    </p>
                   </div>
                   <span className={`text-[10px] font-semibold shrink-0 ${alert.resolved ? "text-[#16a34a]" : "text-[#dc2626]"}`}>
                     {alert.resolved ? "Resolved" : "Active"}

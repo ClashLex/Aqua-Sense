@@ -21,22 +21,16 @@ const STATUS_COLORS: Record<StatusType, string> = {
   DANGER: "#dc2626",
 };
 
-const STATUS_BG: Record<StatusType, string> = {
-  SAFE: "#f0fdf4",
-  WARNING: "#fffbeb",
-  DANGER: "#fef2f2",
+const STATUS_BADGE_BG: Record<StatusType, string> = {
+  SAFE: "#dcfce7",
+  WARNING: "#fef3c7",
+  DANGER: "#fee2e2",
 };
 
 const STATUS_BORDER: Record<StatusType, string> = {
   SAFE: "#bbf7d0",
   WARNING: "#fde68a",
   DANGER: "#fecaca",
-};
-
-const STATUS_BADGE_BG: Record<StatusType, string> = {
-  SAFE: "#dcfce7",
-  WARNING: "#fef3c7",
-  DANGER: "#fee2e2",
 };
 
 function useCountUp(target: number, duration = 600) {
@@ -64,7 +58,7 @@ function useCountUp(target: number, duration = 600) {
 
 export function MetricCard({ metric, label, value, unit, status, history, index, offline = false }: MetricCardProps) {
   const displayed = useCountUp(value);
-  const color = offline ? "#94a3b8" : STATUS_COLORS[status];
+  const color = offline ? "var(--app-text-3)" : STATUS_COLORS[status];
   const isDanger = !offline && status === "DANGER";
   const decimals = metric === "TDS" ? 0 : 2;
   const chartData = history.map((v, i) => ({ i, v }));
@@ -76,15 +70,16 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05, duration: 0.3 }}
       data-testid={`metric-card-${metric.toLowerCase()}`}
-      className={`relative rounded-xl border p-4 overflow-hidden bg-white ${isDanger ? "animate-pulse-danger" : ""}`}
+      className={`relative rounded-xl border p-4 overflow-hidden ${isDanger ? "animate-pulse-danger" : ""}`}
       style={{
+        background: "var(--app-surface)",
         borderColor: offline
-          ? "#e2e8f0"
+          ? "var(--app-border)"
           : isDanger
           ? "#fca5a5"
           : status === "WARNING"
           ? "#fde68a"
-          : "#e2e8f0",
+          : "var(--app-border)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
         opacity: offline ? 0.65 : 1,
       }}
@@ -93,18 +88,19 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
       {!offline && (
         <div
           className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl"
-          style={{ background: color }}
+          style={{ background: STATUS_COLORS[status] }}
         />
       )}
 
       {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[#64748b] text-xs font-medium tracking-wide">
+        <span className="text-xs font-medium tracking-wide" style={{ color: "var(--app-text-2)" }}>
           {label}
         </span>
         {offline ? (
           <span
-            className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#f1f5f9] text-[#94a3b8] border border-[#e2e8f0]"
+            className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full border"
+            style={{ background: "var(--app-surface-2)", color: "var(--app-text-3)", borderColor: "var(--app-border)" }}
             data-testid={`status-${metric.toLowerCase()}`}
           >
             <WifiOff className="w-2.5 h-2.5" />
@@ -114,7 +110,7 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
           <span
             className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
             style={{
-              color,
+              color: STATUS_COLORS[status],
               backgroundColor: STATUS_BADGE_BG[status],
               border: `1px solid ${STATUS_BORDER[status]}`,
             }}
@@ -129,8 +125,8 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
       <div className="flex items-end gap-1 mb-3">
         {offline ? (
           <span
-            className="text-3xl font-semibold leading-none text-[#cbd5e1]"
-            style={{ fontFamily: "var(--app-font-mono)" }}
+            className="text-3xl font-semibold leading-none"
+            style={{ fontFamily: "var(--app-font-mono)", color: "var(--app-border)" }}
             data-testid={`value-${metric.toLowerCase()}`}
           >
             —
@@ -139,13 +135,15 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
           <>
             <span
               className="text-3xl font-semibold leading-none"
-              style={{ fontFamily: "var(--app-font-mono)", color }}
+              style={{ fontFamily: "var(--app-font-mono)", color: STATUS_COLORS[status] }}
               data-testid={`value-${metric.toLowerCase()}`}
             >
               {displayed.toFixed(decimals)}
             </span>
             {unit && (
-              <span className="text-[#94a3b8] text-sm font-mono mb-0.5">{unit.trim()}</span>
+              <span className="text-sm mb-0.5" style={{ color: "var(--app-text-3)", fontFamily: "var(--app-font-mono)" }}>
+                {unit.trim()}
+              </span>
             )}
           </>
         )}
@@ -157,14 +155,14 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
           <AreaChart data={chartData} margin={{ top: 2, right: 2, bottom: 0, left: 2 }}>
             <defs>
               <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={offline ? 0.06 : 0.18} />
-                <stop offset="95%" stopColor={color} stopOpacity={0} />
+                <stop offset="5%" stopColor={offline ? "#94a3b8" : STATUS_COLORS[status]} stopOpacity={offline ? 0.06 : 0.18} />
+                <stop offset="95%" stopColor={offline ? "#94a3b8" : STATUS_COLORS[status]} stopOpacity={0} />
               </linearGradient>
             </defs>
             <Area
               type="monotone"
               dataKey="v"
-              stroke={color}
+              stroke={offline ? "#94a3b8" : STATUS_COLORS[status]}
               strokeWidth={1.5}
               fill={`url(#${gradId})`}
               dot={false}
@@ -178,7 +176,7 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
       {/* Live pulse dot */}
       <motion.div
         className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full"
-        style={{ backgroundColor: offline ? "#cbd5e1" : color }}
+        style={{ backgroundColor: offline ? "var(--app-border)" : STATUS_COLORS[status] }}
         animate={{ opacity: offline ? [0.3, 0.7, 0.3] : [1, 0.3, 1] }}
         transition={{ repeat: Infinity, duration: offline ? 1.4 : 2.2, delay: index * 0.28 }}
       />

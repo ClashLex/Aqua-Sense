@@ -40,20 +40,19 @@ export function AnomalyBanner({ anomalies, onDismiss }: AnomalyBannerProps) {
               <span className="text-[#dc2626] text-xs font-semibold">
                 Anomaly detected
               </span>
-              <span className="text-[#374151] text-xs ml-2">
+              <span className="text-xs ml-2" style={{ color: "var(--app-text-4)" }}>
                 {anomaly.threshold} at {anomaly.sensor}
               </span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
-              <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#dc2626] border border-[#fca5a5]"
-              >
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[#fee2e2] text-[#dc2626] border border-[#fca5a5]">
                 {anomaly.severity}
               </span>
               <button
                 onClick={() => onDismiss(anomaly.id)}
-                className="text-[#94a3b8] hover:text-[#374151] transition-colors p-0.5"
+                className="transition-colors p-0.5"
+                style={{ color: "var(--app-text-3)" }}
                 data-testid={`dismiss-anomaly-${anomaly.id}`}
               >
                 <X className="w-4 h-4" />

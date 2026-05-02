@@ -9,11 +9,9 @@ const STATUS_COLORS: Record<StatusType, string> = {
   DANGER: "#dc2626",
 };
 
-const OFFLINE_COLOR = "#cbd5e1";
-
 const SENSOR_POSITIONS: Record<SensorName, { x: string; y: string }> = {
-  "River Station A": { x: "20%", y: "30%" },
-  "Treatment Plant B": { x: "55%", y: "55%" },
+  "River Station A":      { x: "20%", y: "30%" },
+  "Treatment Plant B":    { x: "55%", y: "55%" },
   "Distribution Point C": { x: "78%", y: "25%" },
 };
 
@@ -33,21 +31,22 @@ function getSensorOverallStatus(snap: SensorSnapshot): StatusType {
   return "SAFE";
 }
 
-export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSensor }: SensorMapProps) {
+export function SensorMap({ readings, selected, onSelect, rainEvent }: SensorMapProps) {
   const isRaining = rainEvent?.active ?? false;
 
   return (
     <div
-      className="rounded-xl border bg-white p-4"
+      className="rounded-xl border p-4"
       style={{
-        borderColor: "#e2e8f0",
+        background: "var(--app-surface)",
+        borderColor: "var(--app-border)",
         boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
       }}
       data-testid="sensor-map"
     >
       <div className="flex items-center gap-2 mb-4">
         <Radio className="w-4 h-4 text-[#2563eb]" />
-        <span className="text-[#0f172a] text-sm font-semibold">Sensor Network</span>
+        <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>Sensor Network</span>
 
         <AnimatePresence>
           {isRaining && (
@@ -56,7 +55,12 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
               initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.85 }}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ml-1 bg-blue-50 border border-blue-200 text-blue-600"
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ml-1"
+              style={{
+                background: "var(--app-primary-tint)",
+                border: "1px solid var(--app-primary-tint-border)",
+                color: "#2563eb",
+              }}
             >
               <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 1.4 }}>🌧</motion.span>
               Rain
@@ -80,8 +84,8 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
         className="relative w-full rounded-lg overflow-hidden"
         style={{
           height: 160,
-          background: isRaining ? "#eff6ff" : "#f8fafc",
-          border: "1px solid #e2e8f0",
+          background: isRaining ? "var(--app-primary-tint)" : "var(--app-surface-2)",
+          border: "1px solid var(--app-border)",
           transition: "background 1s ease",
         }}
       >
@@ -118,7 +122,7 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
           const snap = readings[sensor];
           const isOffline = snap.offline;
           const status = getSensorOverallStatus(snap);
-          const color = isOffline ? OFFLINE_COLOR : STATUS_COLORS[status];
+          const color = isOffline ? "var(--app-text-3)" : STATUS_COLORS[status];
           const isSelected = selected === sensor;
 
           return (
@@ -134,14 +138,15 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
                   className="absolute rounded-full"
                   animate={{ scale: [1, 2.8], opacity: [0.4, 0] }}
                   transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
-                  style={{ backgroundColor: color, width: 12, height: 12, left: -6, top: -6 }}
+                  style={{ backgroundColor: STATUS_COLORS[status], width: 12, height: 12, left: -6, top: -6 }}
                 />
               )}
               <motion.div
-                className="relative w-3 h-3 rounded-full border-2 bg-white"
+                className="relative w-3 h-3 rounded-full border-2"
                 style={{
-                  borderColor: color,
-                  outline: isSelected ? `2px solid ${color}` : undefined,
+                  background: "var(--app-surface)",
+                  borderColor: isOffline ? "#94a3b8" : STATUS_COLORS[status],
+                  outline: isSelected ? `2px solid ${isOffline ? "#94a3b8" : STATUS_COLORS[status]}` : undefined,
                   outlineOffset: 3,
                 }}
                 animate={isOffline ? { opacity: [0.4, 0.9, 0.4] } : {}}
@@ -150,13 +155,20 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
               />
               {isOffline && (
                 <div className="absolute -top-1.5 -right-1.5">
-                  <WifiOff className="w-2.5 h-2.5 text-[#94a3b8]" />
+                  <WifiOff className="w-2.5 h-2.5" style={{ color: "var(--app-text-3)" }} />
                 </div>
               )}
               <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
-                <div className="px-2 py-1 rounded-lg text-xs font-medium bg-white border border-[#e2e8f0] text-[#0f172a] shadow-md">
+                <div
+                  className="px-2 py-1 rounded-lg text-xs font-medium shadow-md"
+                  style={{
+                    background: "var(--app-surface)",
+                    border: "1px solid var(--app-border)",
+                    color: "var(--app-text-1)",
+                  }}
+                >
                   {sensor}
-                  <span className="ml-2 font-semibold" style={{ color }}>
+                  <span className="ml-2 font-semibold" style={{ color: isOffline ? "#94a3b8" : STATUS_COLORS[status] }}>
                     {isOffline ? "Offline" : status}
                   </span>
                 </div>
@@ -172,7 +184,7 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
           const snap = readings[sensor];
           const isOffline = snap.offline;
           const status = getSensorOverallStatus(snap);
-          const color = isOffline ? OFFLINE_COLOR : STATUS_COLORS[status];
+          const color = isOffline ? "#94a3b8" : STATUS_COLORS[status];
           const isSelected = selected === sensor;
 
           return (
@@ -184,13 +196,13 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
             >
               <motion.span
                 className="w-2 h-2 rounded-full"
-                style={{ backgroundColor: color, border: isOffline ? `1px solid ${color}` : undefined, background: isOffline ? "white" : color }}
+                style={{ backgroundColor: isOffline ? "transparent" : color, border: isOffline ? `1px solid ${color}` : undefined }}
                 animate={{ opacity: isOffline ? [0.4, 0.9, 0.4] : [1, 0.5, 1] }}
                 transition={{ repeat: Infinity, duration: isOffline ? 1.5 : 2.5 }}
               />
-              <span className="text-xs font-medium text-[#64748b]">
+              <span className="text-xs font-medium" style={{ color: "var(--app-text-2)" }}>
                 {sensor}
-                {isOffline && <span className="ml-1 text-[#94a3b8]">(offline)</span>}
+                {isOffline && <span className="ml-1" style={{ color: "var(--app-text-3)" }}>(offline)</span>}
               </span>
             </button>
           );

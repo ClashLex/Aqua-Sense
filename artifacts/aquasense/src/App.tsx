@@ -9,9 +9,11 @@ import { Dashboard } from "./pages/Dashboard";
 import { Analytics } from "./pages/Analytics";
 import { Alerts } from "./pages/Alerts";
 import { Assistant } from "./pages/Assistant";
+import { Guide } from "./pages/Guide";
 import NotFound from "@/pages/not-found";
 import { useSensorData, SensorDataProvider } from "./hooks/useSensorData";
 import { CopilotChat } from "./components/CopilotChat";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +22,7 @@ function getPageTitle(location: string): string {
   if (location.startsWith("/analytics")) return "Analytics";
   if (location.startsWith("/alerts")) return "Alerts";
   if (location.startsWith("/assistant")) return "AI Assistant";
+  if (location.startsWith("/guide")) return "Setup Guide";
   return "AquaSense";
 }
 
@@ -29,17 +32,13 @@ function AppShell() {
   const [location] = useLocation();
 
   const pageTitle = getPageTitle(location);
-  // isLive: true while the data pipeline is actively updating (within last 30 s).
   const isLive = Date.now() - lastUpdated.getTime() < 30_000;
 
   return (
-    <div className="min-h-screen bg-[#f8fafc]">
-      {/* Fixed left sidebar */}
+    <div className="min-h-screen" style={{ background: "var(--app-bg)" }}>
       <Sidebar alertCount={activeAlerts} isLive={isLive} lastUpdated={lastUpdated} />
 
-      {/* Main area — offset by sidebar width on desktop */}
       <div className="md:ml-[240px] flex flex-col min-h-screen">
-        {/* Sticky top bar */}
         <TopBar
           title={pageTitle}
           lastUpdated={lastUpdated}
@@ -47,7 +46,6 @@ function AppShell() {
           alertCount={activeAlerts}
         />
 
-        {/* Page content */}
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             key={location}
@@ -62,6 +60,7 @@ function AppShell() {
               <Route path="/analytics" component={Analytics} />
               <Route path="/alerts" component={Alerts} />
               <Route path="/assistant" component={Assistant} />
+              <Route path="/guide" component={Guide} />
               <Route component={NotFound} />
             </Switch>
           </motion.main>
@@ -77,11 +76,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <SensorDataProvider>
-          <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
-            <AppShell />
-          </WouterRouter>
-        </SensorDataProvider>
+        <ThemeProvider>
+          <SensorDataProvider>
+            <WouterRouter base={import.meta.env.BASE_URL.replace(/\/$/, "")}>
+              <AppShell />
+            </WouterRouter>
+          </SensorDataProvider>
+        </ThemeProvider>
         <Toaster />
       </TooltipProvider>
     </QueryClientProvider>

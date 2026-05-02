@@ -70,7 +70,7 @@ export function Dashboard() {
                 <span className="text-[#dc2626] text-xs font-semibold">
                   Crisis simulation active
                 </span>
-                <span className="text-[#6b7280] text-xs hidden sm:block">
+                <span className="text-xs hidden sm:block" style={{ color: "var(--app-text-2)" }}>
                   All metrics forced to danger range
                 </span>
                 <span className="ml-auto text-xs font-semibold tabular-nums text-[#dc2626]" style={{ fontFamily: "var(--app-font-mono)" }}>
@@ -87,13 +87,13 @@ export function Dashboard() {
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="rounded-xl border px-4 py-3 flex items-center gap-3 bg-[#eff6ff]"
-                style={{ borderColor: "#bfdbfe" }}
+                className="rounded-xl border px-4 py-3 flex items-center gap-3"
+                style={{ background: "var(--app-primary-tint)", borderColor: "var(--app-primary-tint-border)" }}
                 data-testid="rain-event-banner"
               >
                 <motion.span animate={{ y: [0, 2, 0] }} transition={{ repeat: Infinity, duration: 1.2 }} className="text-base shrink-0">🌧</motion.span>
                 <span className="text-[#1d4ed8] text-xs font-semibold">Rain event active</span>
-                <span className="text-[#64748b] text-xs hidden sm:block">
+                <span className="text-xs hidden sm:block" style={{ color: "var(--app-text-2)" }}>
                   Turbidity +{rainEvent.intensity.toFixed(1)} NTU · TDS rising
                 </span>
                 <Droplets className="w-4 h-4 text-[#3b82f6] ml-auto shrink-0" />
@@ -108,13 +108,13 @@ export function Dashboard() {
                 initial={{ opacity: 0, y: -12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
-                className="rounded-xl border px-4 py-3 flex items-center gap-3 bg-[#f8fafc]"
-                style={{ borderColor: "#e2e8f0" }}
+                className="rounded-xl border px-4 py-3 flex items-center gap-3"
+                style={{ background: "var(--app-surface-2)", borderColor: "var(--app-border)" }}
                 data-testid="offline-sensor-banner"
               >
-                <WifiOff className="w-4 h-4 text-[#94a3b8] shrink-0" />
-                <span className="text-[#374151] text-xs font-semibold">Sensor offline</span>
-                <span className="text-[#64748b] text-xs">{offlineSensor} — reconnecting…</span>
+                <WifiOff className="w-4 h-4 shrink-0" style={{ color: "var(--app-text-3)" }} />
+                <span className="text-xs font-semibold" style={{ color: "var(--app-text-1)" }}>Sensor offline</span>
+                <span className="text-xs" style={{ color: "var(--app-text-2)" }}>{offlineSensor} — reconnecting…</span>
               </motion.div>
             )}
           </AnimatePresence>
