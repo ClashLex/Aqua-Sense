@@ -15,7 +15,7 @@ import { predictNext } from "../utils/linearRegression";
 const METRICS: MetricType[] = ["pH", "Turbidity", "Temperature", "DO", "TDS"];
 
 const METRIC_COLORS: Record<MetricType, string> = {
-  pH: "#00f5ff", Turbidity: "#39ff14", Temperature: "#ffaa00", DO: "#c084fc", TDS: "#60a5fa",
+  pH: "#2563eb", Turbidity: "#16a34a", Temperature: "#d97706", DO: "#7c3aed", TDS: "#0891b2",
 };
 const METRIC_UNITS: Record<MetricType, string> = {
   pH: "", Turbidity: " NTU", Temperature: "°C", DO: " mg/L", TDS: " ppm",
@@ -33,7 +33,7 @@ type SortDir = "asc" | "desc";
 const SEVERITY_RANK: Record<string, number> = { CRITICAL: 3, HIGH: 2, MEDIUM: 1 };
 
 const SEV_COLORS: Record<string, string> = {
-  CRITICAL: "#ff2d55", HIGH: "#ff6b35", MEDIUM: "#ffaa00",
+  CRITICAL: "#dc2626", HIGH: "#ea580c", MEDIUM: "#d97706", LOW: "#16a34a",
 };
 
 // ── Helper functions ────────────────────────────────────────────────────────
@@ -46,13 +46,12 @@ function calcWaterScore(snap: Record<MetricType, { status: string }>): number {
 }
 
 function scoreLabel(score: number): { label: string; color: string } {
-  if (score >= 80) return { label: "EXCELLENT", color: "#39ff14" };
-  if (score >= 50) return { label: "GOOD", color: "#ffaa00" };
-  if (score >= 25) return { label: "POOR", color: "#ff6b35" };
-  return { label: "CRITICAL", color: "#ff2d55" };
+  if (score >= 80) return { label: "Excellent", color: "#16a34a" };
+  if (score >= 50) return { label: "Good", color: "#d97706" };
+  if (score >= 25) return { label: "Poor", color: "#ea580c" };
+  return { label: "Critical", color: "#dc2626" };
 }
 
-/** Deterministic heatmap: 5 metrics × 24 hours, last column = actual current status */
 function genHeatmap(
   sensor: SensorName,
   currentStatuses: Record<MetricType, StatusType>,
@@ -120,8 +119,8 @@ function generateReportText(
 function SortIcon({ col, active, dir }: { col: SortCol; active: SortCol; dir: SortDir }) {
   if (col !== active) return <ChevronsUpDown className="w-3 h-3 opacity-30 inline ml-1" />;
   return dir === "asc"
-    ? <ChevronUp className="w-3 h-3 text-[#00f5ff] inline ml-1" />
-    : <ChevronDown className="w-3 h-3 text-[#00f5ff] inline ml-1" />;
+    ? <ChevronUp className="w-3 h-3 text-[#2563eb] inline ml-1" />
+    : <ChevronDown className="w-3 h-3 text-[#2563eb] inline ml-1" />;
 }
 
 // ── Component ───────────────────────────────────────────────────────────────
@@ -141,7 +140,6 @@ export function Analytics() {
   const score = calcWaterScore(snap);
   const { label: scoreLabel2, color: scoreColor } = scoreLabel(score);
 
-  // Heatmap: rows = METRICS, cols = last 24 hours
   const currentStatuses = Object.fromEntries(
     METRICS.map((m) => [m, snap[m].status as StatusType]),
   ) as Record<MetricType, StatusType>;
@@ -152,7 +150,6 @@ export function Analytics() {
     return h.toString().padStart(2, "0");
   });
 
-  // Sorted anomaly table
   const handleSort = (col: SortCol) => {
     if (col === sortCol) setSortDir((d) => (d === "asc" ? "desc" : "asc"));
     else { setSortCol(col); setSortDir("desc"); }
@@ -168,7 +165,6 @@ export function Analytics() {
     return sortDir === "desc" ? -cmp : cmp;
   });
 
-  // Export report
   const handleExport = useCallback(async () => {
     const text = generateReportText(activeSensor, snap as Record<MetricType, { value: number; unit: string; status: string; label: string }>, anomalies);
     try {
@@ -176,7 +172,6 @@ export function Analytics() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2500);
     } catch {
-      // Fallback: create a temporary textarea
       const ta = document.createElement("textarea");
       ta.value = text;
       document.body.appendChild(ta);
@@ -201,17 +196,17 @@ export function Analytics() {
     <div className="space-y-6" data-testid="analytics-page">
 
       {/* ── Header row ─────────────────────────────────────────────────── */}
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-[#e2e8f0] text-xs font-mono tracking-widest uppercase">Sensor:</span>
+      <div className="flex flex-wrap items-center gap-2">
+        <span className="text-[#64748b] text-xs font-medium">Sensor:</span>
         {SENSORS.map((s) => (
           <button
             key={s}
             onClick={() => setActiveSensor(s)}
-            className="px-3 py-1 rounded text-[10px] font-mono tracking-wider uppercase border transition-all"
+            className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
             style={{
-              borderColor: activeSensor === s ? "rgba(0,245,255,0.5)" : "rgba(255,255,255,0.1)",
-              background: activeSensor === s ? "rgba(0,245,255,0.1)" : "transparent",
-              color: activeSensor === s ? "#00f5ff" : "#64748b",
+              borderColor: activeSensor === s ? "#93c5fd" : "#e2e8f0",
+              background: activeSensor === s ? "#eff6ff" : "transparent",
+              color: activeSensor === s ? "#2563eb" : "#64748b",
             }}
             data-testid={`sensor-tab-${s.replace(/\s+/g, "-").toLowerCase()}`}
           >
@@ -219,16 +214,16 @@ export function Analytics() {
           </button>
         ))}
 
-        <div className="ml-auto flex items-center gap-2">
+        <div className="ml-auto flex items-center gap-2 flex-wrap">
           {TIME_RANGES.map((r) => (
             <button
               key={r}
               onClick={() => setRange(r)}
-              className="px-3 py-1 rounded text-[10px] font-mono tracking-wider uppercase border transition-all"
+              className="px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
               style={{
-                borderColor: range === r ? "rgba(0,245,255,0.5)" : "rgba(255,255,255,0.1)",
-                background: range === r ? "rgba(0,245,255,0.1)" : "transparent",
-                color: range === r ? "#00f5ff" : "#64748b",
+                borderColor: range === r ? "#93c5fd" : "#e2e8f0",
+                background: range === r ? "#eff6ff" : "transparent",
+                color: range === r ? "#2563eb" : "#64748b",
               }}
               data-testid={`time-range-${r}`}
             >
@@ -236,14 +231,13 @@ export function Analytics() {
             </button>
           ))}
 
-          {/* Export Report */}
           <button
             onClick={handleExport}
-            className="flex items-center gap-2 px-3 py-1 rounded text-[10px] font-mono tracking-wider uppercase border transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium border transition-all"
             style={{
-              borderColor: copied ? "rgba(57,255,20,0.5)" : "rgba(0,245,255,0.3)",
-              background: copied ? "rgba(57,255,20,0.1)" : "rgba(0,245,255,0.06)",
-              color: copied ? "#39ff14" : "#00f5ff",
+              borderColor: copied ? "#bbf7d0" : "#e2e8f0",
+              background: copied ? "#f0fdf4" : "transparent",
+              color: copied ? "#16a34a" : "#64748b",
             }}
             data-testid="export-report-btn"
           >
@@ -260,11 +254,11 @@ export function Analytics() {
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
-          className="rounded-xl border p-4 flex flex-col items-center justify-center"
-          style={{ background: "#0d1f3c", borderColor: "rgba(0,245,255,0.15)" }}
+          className="rounded-xl border bg-white p-4 flex flex-col items-center justify-center"
+          style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
           data-testid="quality-score-gauge"
         >
-          <span className="text-[#64748b] text-[10px] font-mono tracking-widest uppercase mb-2">
+          <span className="text-[#64748b] text-[10px] font-medium tracking-wide uppercase mb-3">
             Water Quality Score
           </span>
           <div className="relative">
@@ -278,31 +272,31 @@ export function Analytics() {
               endAngle={-270}
             >
               <PolarAngleAxis type="number" domain={[0, 100]} tick={false} />
-              <RadialBar dataKey="value" cornerRadius={4} background={{ fill: "rgba(255,255,255,0.05)" }} />
+              <RadialBar dataKey="value" cornerRadius={4} background={{ fill: "rgba(0,0,0,0.05)" }} />
             </RadialBarChart>
             <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <span className="text-3xl font-bold" style={{ color: scoreColor, fontFamily: "var(--app-font-display)" }}>
+              <span className="text-3xl font-semibold" style={{ color: scoreColor, fontFamily: "DM Mono, monospace" }}>
                 {score}
               </span>
-              <span className="text-[10px] font-mono" style={{ color: scoreColor }}>/ 100</span>
+              <span className="text-[10px]" style={{ color: scoreColor, fontFamily: "DM Mono, monospace" }}>/ 100</span>
             </div>
           </div>
-          <span className="text-sm font-bold mt-2 tracking-widest" style={{ color: scoreColor, fontFamily: "var(--app-font-display)" }}>
+          <span className="text-sm font-semibold mt-1" style={{ color: scoreColor, fontFamily: "var(--app-font-display)" }}>
             {scoreLabel2}
           </span>
           {/* Forecast legend */}
-          <div className="mt-4 flex flex-col gap-1.5 w-full">
+          <div className="mt-4 flex flex-col gap-1.5 w-full border-t border-[#f1f5f9] pt-3">
             <div className="flex items-center gap-2">
               <svg width="20" height="4" className="shrink-0">
-                <line x1="0" y1="2" x2="20" y2="2" stroke="#00f5ff" strokeWidth="1.5" />
+                <line x1="0" y1="2" x2="20" y2="2" stroke="#2563eb" strokeWidth="1.5" />
               </svg>
-              <span className="text-[9px] font-mono text-[#64748b] tracking-wider">ACTUAL DATA</span>
+              <span className="text-[9px] text-[#64748b] tracking-wider font-medium">ACTUAL DATA</span>
             </div>
             <div className="flex items-center gap-2">
               <svg width="20" height="4" className="shrink-0">
-                <line x1="0" y1="2" x2="20" y2="2" stroke="#00f5ff" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.5" />
+                <line x1="0" y1="2" x2="20" y2="2" stroke="#2563eb" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.5" />
               </svg>
-              <span className="text-[9px] font-mono text-[#64748b] tracking-wider">2HR FORECAST</span>
+              <span className="text-[9px] text-[#64748b] tracking-wider font-medium">2HR FORECAST</span>
             </div>
           </div>
         </motion.div>
@@ -311,7 +305,6 @@ export function Analytics() {
         <div className="lg:col-span-3 grid grid-cols-1 sm:grid-cols-2 gap-3">
           {METRICS.map((metric, idx) => {
             const values = hist[metric].slice(-points);
-            // 30 future steps ≈ 2 hours relative to displayed history
             const predictions = predictNext(values, 30);
             const color = METRIC_COLORS[metric];
             const pivot = values.length - 1;
@@ -331,17 +324,17 @@ export function Analytics() {
                 initial={{ opacity: 0, y: 15 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="rounded-xl border p-3"
-                style={{ background: "#0a1628", borderColor: `${color}20` }}
+                className="rounded-xl border bg-white p-3"
+                style={{ borderColor: `${color}30`, boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
                 data-testid={`metric-chart-${metric.toLowerCase()}`}
               >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-[10px] font-mono tracking-widest uppercase" style={{ color }}>
+                  <span className="text-xs font-semibold" style={{ color }}>
                     {metric}{METRIC_UNITS[metric]}
                   </span>
                   <span
-                    className="text-[10px] font-mono px-1.5 py-0.5 rounded"
-                    style={{ color, background: `${color}15`, border: `1px solid ${color}30` }}
+                    className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                    style={{ color, background: `${color}12`, border: `1px solid ${color}25` }}
                   >
                     {snap[metric].status}
                   </span>
@@ -349,12 +342,12 @@ export function Analytics() {
 
                 <ResponsiveContainer width="100%" height={110}>
                   <LineChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: -28 }}>
-                    <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.04)" vertical={false} />
+                    <CartesianGrid strokeDasharray="2 2" stroke="rgba(0,0,0,0.05)" vertical={false} />
                     <XAxis
                       dataKey="i"
                       tickLine={false}
                       axisLine={false}
-                      tick={{ fill: "#475569", fontSize: 8, fontFamily: "JetBrains Mono" }}
+                      tick={{ fill: "#94a3b8", fontSize: 8, fontFamily: "DM Mono" }}
                       tickFormatter={(v) => {
                         if (v === 0) return "─2hr";
                         if (v === pivot) return "now";
@@ -364,19 +357,20 @@ export function Analytics() {
                       ticks={[0, pivot, values.length + 29]}
                     />
                     <YAxis
-                      tick={{ fill: "#64748b", fontSize: 9, fontFamily: "JetBrains Mono" }}
+                      tick={{ fill: "#94a3b8", fontSize: 9, fontFamily: "DM Mono" }}
                       tickLine={false}
                       axisLine={false}
                       width={28}
                     />
                     <Tooltip
                       contentStyle={{
-                        background: "#0d1f3c",
+                        background: "#ffffff",
                         border: `1px solid ${color}30`,
                         borderRadius: 6,
                         fontSize: 10,
-                        fontFamily: "JetBrains Mono",
-                        color: "#e2e8f0",
+                        fontFamily: "DM Mono",
+                        color: "#0f172a",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
                       }}
                       formatter={(v: number, name: string) => [
                         `${v}${METRIC_UNITS[metric]}`,
@@ -385,7 +379,6 @@ export function Analytics() {
                       labelFormatter={() => ""}
                     />
 
-                    {/* Forecast zone background */}
                     <ReferenceArea
                       x1={values.length}
                       x2={values.length + 29}
@@ -393,17 +386,16 @@ export function Analytics() {
                       stroke="none"
                     />
 
-                    {/* NOW divider */}
                     <ReferenceLine
                       x={pivot}
-                      stroke="rgba(255,255,255,0.12)"
+                      stroke="rgba(0,0,0,0.12)"
                       strokeDasharray="3 2"
                       label={{
                         value: "NOW",
                         position: "insideTopLeft",
-                        fill: "#475569",
+                        fill: "#94a3b8",
                         fontSize: 8,
-                        fontFamily: "JetBrains Mono",
+                        fontFamily: "DM Mono",
                         dy: -2,
                       }}
                     />
@@ -443,27 +435,26 @@ export function Analytics() {
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
-        className="rounded-xl border p-4"
-        style={{ background: "#0d1f3c", borderColor: "rgba(0,245,255,0.15)" }}
+        className="rounded-xl border bg-white p-4"
+        style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
         data-testid="anomaly-heatmap"
       >
         <div className="flex flex-wrap items-center gap-4 mb-4">
-          <span className="text-[#e2e8f0] text-xs font-mono tracking-widest uppercase">
+          <span className="text-[#0f172a] text-sm font-semibold">
             24-Hour Anomaly Heatmap
           </span>
-          <span className="text-[#475569] text-[10px] font-mono">{activeSensor}</span>
+          <span className="text-[#64748b] text-xs">{activeSensor}</span>
 
-          {/* Legend */}
           <div className="ml-auto flex items-center gap-4">
             {(["SAFE", "WARNING", "DANGER"] as StatusType[]).map((s) => {
-              const c = s === "SAFE" ? "#39ff14" : s === "WARNING" ? "#ffaa00" : "#ff2d55";
+              const c = s === "SAFE" ? "#16a34a" : s === "WARNING" ? "#d97706" : "#dc2626";
               return (
                 <div key={s} className="flex items-center gap-1.5">
                   <div
                     className="w-3 h-3 rounded-sm"
-                    style={{ background: `${c}35`, border: `1px solid ${c}55` }}
+                    style={{ background: `${c}25`, border: `1px solid ${c}45` }}
                   />
-                  <span className="text-[9px] font-mono tracking-wider" style={{ color: c }}>{s}</span>
+                  <span className="text-[9px] font-medium tracking-wider" style={{ color: c }}>{s}</span>
                 </div>
               );
             })}
@@ -481,8 +472,8 @@ export function Analytics() {
                   className="flex-1 text-center"
                   style={{
                     fontSize: 8,
-                    fontFamily: "JetBrains Mono",
-                    color: i === 23 ? "#00f5ff" : "#334155",
+                    fontFamily: "DM Mono",
+                    color: i === 23 ? "#2563eb" : "#94a3b8",
                     fontWeight: i === 23 ? 700 : 400,
                     minWidth: 20,
                   }}
@@ -502,7 +493,7 @@ export function Analytics() {
                     style={{
                       width: 86,
                       fontSize: 9,
-                      fontFamily: "JetBrains Mono",
+                      fontFamily: "DM Mono",
                       color: mColor,
                       textTransform: "uppercase",
                       letterSpacing: "0.06em",
@@ -511,9 +502,9 @@ export function Analytics() {
                     {metric}
                   </div>
                   {heatmapData[mi].map((status, hi) => {
-                    const c = status === "SAFE" ? "#39ff14" : status === "WARNING" ? "#ffaa00" : "#ff2d55";
+                    const c = status === "SAFE" ? "#16a34a" : status === "WARNING" ? "#d97706" : "#dc2626";
                     const isNow = hi === 23;
-                    const opacity = status === "SAFE" ? "22" : status === "WARNING" ? "44" : "66";
+                    const opacity = status === "SAFE" ? "18" : status === "WARNING" ? "35" : "55";
                     return (
                       <div
                         key={hi}
@@ -522,11 +513,11 @@ export function Analytics() {
                           minWidth: 20,
                           height: 22,
                           background: `${c}${opacity}`,
-                          border: `1px solid ${c}${isNow ? "99" : "33"}`,
+                          border: `1px solid ${c}${isNow ? "80" : "25"}`,
                           margin: "0 1px",
                           cursor: "default",
-                          boxShadow: isNow ? `0 0 6px ${c}50` : "none",
-                          outline: isNow ? `1px solid ${c}50` : "none",
+                          outline: isNow ? `2px solid ${c}30` : "none",
+                          outlineOffset: 1,
                         }}
                         title={`${metric} · ${hourLabels[hi]}:00 → ${status}`}
                       />
@@ -542,7 +533,7 @@ export function Analytics() {
               {hourLabels.map((_, i) => (
                 <div key={i} className="flex-1 text-center" style={{ minWidth: 20 }}>
                   {i === 23 && (
-                    <span style={{ fontSize: 7, color: "#00f5ff", fontFamily: "JetBrains Mono", letterSpacing: 1 }}>
+                    <span style={{ fontSize: 7, color: "#2563eb", fontFamily: "DM Mono", letterSpacing: 1 }}>
                       NOW
                     </span>
                   )}
@@ -555,33 +546,31 @@ export function Analytics() {
 
       {/* ── Sortable anomaly history table ─────────────────────────────── */}
       <div
-        className="rounded-xl border overflow-hidden"
-        style={{ background: "#0d1f3c", borderColor: "rgba(0,245,255,0.15)" }}
+        className="rounded-xl border bg-white overflow-hidden"
+        style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
         data-testid="anomaly-history-table"
       >
-        <div className="px-4 py-3 border-b border-[rgba(0,245,255,0.1)] flex items-center justify-between">
-          <span className="text-[#e2e8f0] text-xs font-mono tracking-widest uppercase">
+        <div className="px-4 py-3 border-b border-[#f1f5f9] flex items-center justify-between">
+          <span className="text-[#0f172a] text-sm font-semibold">
             Anomaly History
           </span>
-          <span className="text-[#475569] text-[10px] font-mono">
+          <span className="text-[#94a3b8] text-xs">
             {anomalies.length} record{anomalies.length !== 1 ? "s" : ""} — click headers to sort
           </span>
         </div>
         <div className="overflow-x-auto">
-          <table className="w-full text-xs font-mono">
+          <table className="w-full text-xs">
             <thead>
-              <tr className="border-b border-[rgba(0,245,255,0.08)]">
+              <tr className="border-b border-[#f1f5f9]">
                 {TABLE_COLS.map(({ key, label }) => (
                   <th
                     key={key}
                     onClick={() => handleSort(key)}
-                    className="px-4 py-2.5 text-left tracking-wider uppercase text-[10px] cursor-pointer select-none transition-colors"
-                    style={{
-                      color: sortCol === key ? "#00f5ff" : "#64748b",
-                    }}
+                    className="px-4 py-2.5 text-left uppercase text-[10px] cursor-pointer select-none transition-colors"
+                    style={{ color: sortCol === key ? "#2563eb" : "#94a3b8", fontFamily: "DM Mono" }}
                     data-testid={`sort-col-${key}`}
                   >
-                    <span className="inline-flex items-center gap-0.5 hover:text-[#e2e8f0] transition-colors">
+                    <span className="inline-flex items-center gap-0.5 hover:text-[#0f172a] transition-colors">
                       {label}
                       <SortIcon col={key} active={sortCol} dir={sortDir} />
                     </span>
@@ -592,44 +581,50 @@ export function Analytics() {
             <tbody>
               {sortedAnomalies.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-4 py-8 text-center text-[#475569] font-mono text-[11px] tracking-wider">
-                    NO ANOMALIES RECORDED
+                  <td colSpan={6} className="px-4 py-8 text-center text-[#94a3b8] text-xs">
+                    No anomalies recorded
                   </td>
                 </tr>
               ) : (
                 sortedAnomalies.map((a) => {
-                  const sevColor = SEV_COLORS[a.severity] ?? "#ffaa00";
+                  const sevColor = SEV_COLORS[a.severity] ?? "#d97706";
                   return (
                     <tr
                       key={a.id}
-                      className="border-b border-[rgba(255,255,255,0.04)] hover:bg-[rgba(255,255,255,0.025)] transition-colors"
+                      className="border-b border-[#f8fafc] hover:bg-[#f8fafc] transition-colors"
                       style={{ background: a.resolved ? "transparent" : `${sevColor}06` }}
                       data-testid={`anomaly-row-${a.id}`}
                     >
-                      <td className="px-4 py-2.5 text-[#64748b] tabular-nums">
+                      <td className="px-4 py-2.5 text-[#64748b] tabular-nums" style={{ fontFamily: "DM Mono" }}>
                         {a.timestamp.toLocaleTimeString()}
                       </td>
-                      <td className="px-4 py-2.5 text-[#cbd5e1]">{a.sensor}</td>
-                      <td className="px-4 py-2.5" style={{ color: METRIC_COLORS[a.metric] }}>
+                      <td className="px-4 py-2.5 text-[#374151]">{a.sensor}</td>
+                      <td className="px-4 py-2.5 font-medium" style={{ color: METRIC_COLORS[a.metric] }}>
                         {a.metric}
                       </td>
-                      <td className="px-4 py-2.5 text-[#e2e8f0] tabular-nums">
+                      <td className="px-4 py-2.5 text-[#0f172a] tabular-nums" style={{ fontFamily: "DM Mono" }}>
                         {a.value.toFixed(2)}{METRIC_UNITS[a.metric]}
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className="px-1.5 py-0.5 rounded text-[9px] font-bold tracking-widest"
-                          style={{ color: sevColor, background: `${sevColor}20`, border: `1px solid ${sevColor}35` }}
+                          className="px-1.5 py-0.5 rounded text-[10px] font-medium"
+                          style={{ color: sevColor, background: `${sevColor}14`, border: `1px solid ${sevColor}30` }}
+                          data-testid={`severity-badge-${a.id}`}
                         >
                           {a.severity}
                         </span>
                       </td>
                       <td className="px-4 py-2.5">
                         <span
-                          className="text-[10px] tracking-wider font-semibold"
-                          style={{ color: a.resolved ? "#39ff14" : "#ff2d55" }}
+                          className="text-[10px] font-medium px-1.5 py-0.5 rounded"
+                          style={{
+                            color: a.resolved ? "#16a34a" : "#dc2626",
+                            background: a.resolved ? "#f0fdf4" : "#fef2f2",
+                            border: `1px solid ${a.resolved ? "#bbf7d0" : "#fca5a5"}`,
+                          }}
+                          data-testid={`status-badge-${a.id}`}
                         >
-                          {a.resolved ? "RESOLVED" : "ACTIVE"}
+                          {a.resolved ? "Resolved" : "Active"}
                         </span>
                       </td>
                     </tr>

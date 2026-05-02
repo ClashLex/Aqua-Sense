@@ -6,7 +6,6 @@ interface WaterQualityGaugeProps {
   offline?: boolean;
 }
 
-// Arc from 135° to 405° (270° sweep, clockwise in SVG coords)
 const CX = 90, CY = 86, R = 66, SW = 10;
 const START_DEG = 135;
 const TOTAL_SWEEP = 270;
@@ -37,7 +36,7 @@ function useSmoothedScore(target: number, duration = 700) {
     let raf: number;
     const step = (now: number) => {
       const p = Math.min((now - t0) / duration, 1);
-      const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p; // ease-in-out quad
+      const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
       setDisplay(Math.round(start + diff * eased));
       if (p < 1) raf = requestAnimationFrame(step);
       else from.current = target;
@@ -50,61 +49,52 @@ function useSmoothedScore(target: number, duration = 700) {
 }
 
 function scoreColor(s: number): string {
-  if (s >= 75) return "#39ff14";
-  if (s >= 45) return "#ffaa00";
-  if (s >= 20) return "#ff6b35";
-  return "#ff2d55";
+  if (s >= 75) return "#16a34a";
+  if (s >= 45) return "#d97706";
+  if (s >= 20) return "#ea580c";
+  return "#dc2626";
 }
 
 function scoreLabel(s: number): string {
-  if (s >= 75) return "EXCELLENT";
-  if (s >= 45) return "GOOD";
-  if (s >= 20) return "POOR";
-  return "CRITICAL";
+  if (s >= 75) return "Excellent";
+  if (s >= 45) return "Good";
+  if (s >= 20) return "Poor";
+  return "Critical";
 }
 
 export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQualityGaugeProps) {
   const displayed = useSmoothedScore(offline ? 0 : score);
-  const color = offline ? "#475569" : scoreColor(displayed);
-  const label = offline ? "OFFLINE" : scoreLabel(displayed);
+  const color = offline ? "#cbd5e1" : scoreColor(displayed);
+  const label = offline ? "Offline" : scoreLabel(displayed);
 
-  // Only draw filled arc when score > 0 (avoid zero-length path issues)
   const fillEndDeg = START_DEG + Math.max(displayed, 0.5) / 100 * TOTAL_SWEEP;
   const fillPath = displayed > 0 ? arcPath(START_DEG, fillEndDeg) : null;
 
   return (
     <div
-      className="rounded-xl border flex flex-col items-center p-3 shrink-0"
+      className="rounded-xl border bg-white flex flex-col items-center p-3 shrink-0"
       style={{
-        background: "linear-gradient(135deg, #0a1628 0%, #0d1f3c 100%)",
-        borderColor: offline ? "rgba(71,85,105,0.25)" : `${color}25`,
-        boxShadow: offline ? "none" : `0 0 20px ${color}10`,
+        borderColor: "#e2e8f0",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
         width: 168,
       }}
       data-testid="water-quality-gauge"
     >
-      <span className="text-[#64748b] text-[9px] font-mono tracking-widest uppercase mb-1">
+      <span className="text-[#94a3b8] text-[10px] font-medium tracking-wide uppercase mb-1">
         Water Quality
       </span>
 
       <svg viewBox="0 0 180 148" width="148" height="122">
-        <defs>
-          <filter id="glow-gauge">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
-
-        {/* Background track */}
+        {/* Track */}
         <path
           d={BG_PATH}
           fill="none"
-          stroke="rgba(255,255,255,0.07)"
+          stroke="#e2e8f0"
           strokeWidth={SW}
           strokeLinecap="round"
         />
 
-        {/* Colored fill arc */}
+        {/* Fill arc */}
         {fillPath && (
           <path
             d={fillPath}
@@ -112,7 +102,6 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
             stroke={color}
             strokeWidth={SW}
             strokeLinecap="round"
-            filter="url(#glow-gauge)"
             style={{ transition: "stroke 0.6s ease" }}
           />
         )}
@@ -124,8 +113,8 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           textAnchor="middle"
           fill={color}
           fontSize="32"
-          fontFamily="Orbitron, sans-serif"
-          fontWeight="700"
+          fontFamily="DM Mono, monospace"
+          fontWeight="500"
           style={{ transition: "fill 0.6s ease" }}
         >
           {displayed}
@@ -136,9 +125,9 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           x={CX}
           y={CY + 26}
           textAnchor="middle"
-          fill="#475569"
+          fill="#94a3b8"
           fontSize="9"
-          fontFamily="JetBrains Mono, monospace"
+          fontFamily="DM Mono, monospace"
         >
           / 100
         </text>
@@ -149,34 +138,24 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           y={CY + 42}
           textAnchor="middle"
           fill={color}
-          fontSize="8.5"
-          fontFamily="JetBrains Mono, monospace"
-          letterSpacing="2"
+          fontSize="9"
+          fontFamily="Plus Jakarta Sans, sans-serif"
           fontWeight="700"
+          letterSpacing="0.5"
           style={{ transition: "fill 0.6s ease" }}
         >
           {label}
         </text>
 
-        {/* End cap tick marks at 0% and 100% */}
         {[0, 100].map((pct) => {
           const deg = START_DEG + (pct / 100) * TOTAL_SWEEP;
           const ix = CX + (R - SW / 2 - 2) * Math.cos(toRad(deg));
           const iy = CY + (R - SW / 2 - 2) * Math.sin(toRad(deg));
-          return (
-            <circle
-              key={pct}
-              cx={ix.toFixed(3)}
-              cy={iy.toFixed(3)}
-              r="1.5"
-              fill="rgba(255,255,255,0.2)"
-            />
-          );
+          return <circle key={pct} cx={ix.toFixed(3)} cy={iy.toFixed(3)} r="1.5" fill="#cbd5e1" />;
         })}
       </svg>
 
-      {/* Sensor name */}
-      <span className="text-[#475569] text-[9px] font-mono tracking-wider text-center leading-tight mt-0.5 px-1 truncate w-full text-center">
+      <span className="text-[#94a3b8] text-[9px] font-medium tracking-wide text-center leading-tight mt-0.5 px-1 truncate w-full text-center">
         {sensorName}
       </span>
     </div>

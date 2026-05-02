@@ -18,9 +18,9 @@ const BASE_URL = import.meta.env.BASE_URL.replace(/\/$/, "");
 
 const METRICS: MetricType[] = ["pH", "Turbidity", "Temperature", "DO", "TDS"];
 const METRIC_COLORS: Record<MetricType, string> = {
-  pH: "#00f5ff", Turbidity: "#39ff14", Temperature: "#ffaa00", DO: "#c084fc", TDS: "#60a5fa",
+  pH: "#2563eb", Turbidity: "#16a34a", Temperature: "#d97706", DO: "#7c3aed", TDS: "#0891b2",
 };
-const STATUS_COLORS = { SAFE: "#39ff14", WARNING: "#ffaa00", DANGER: "#ff2d55" } as const;
+const STATUS_COLORS = { SAFE: "#16a34a", WARNING: "#d97706", DANGER: "#dc2626" } as const;
 
 const EMERGENCY_KEYWORDS = ["danger", "unsafe", "critical", "immediately", "emergency", "urgent", "hazardous", "contaminated"];
 
@@ -55,35 +55,35 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
 
       {/* Live readings panel */}
       <div
-        className="rounded-xl border p-3 flex flex-col gap-3"
-        style={{ background: "#0a1628", borderColor: "rgba(0,245,255,0.15)" }}
+        className="rounded-xl border bg-white p-3 flex flex-col gap-3"
+        style={{ borderColor: "#e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.06)" }}
       >
         {/* Header */}
         <div className="flex items-center gap-2">
           <motion.div
-            className="w-1.5 h-1.5 rounded-full bg-[#39ff14]"
+            className="w-1.5 h-1.5 rounded-full bg-[#16a34a]"
             animate={{ opacity: [1, 0.3, 1], scale: [1, 1.2, 1] }}
             transition={{ repeat: Infinity, duration: 1.8 }}
           />
-          <span className="text-[10px] font-mono text-[#e2e8f0] tracking-widest uppercase">
+          <span className="text-[10px] font-medium text-[#0f172a] tracking-wide">
             Live Readings
           </span>
         </div>
 
         {/* Sensor selector */}
         <div className="flex flex-col gap-1">
-          <span className="text-[9px] font-mono text-[#475569] tracking-widest uppercase mb-0.5">
+          <span className="text-[9px] font-medium text-[#94a3b8] tracking-wide uppercase mb-0.5">
             AI Context Sensor
           </span>
           {SENSORS.map((s) => (
             <button
               key={s}
               onClick={() => onSensorChange(s)}
-              className="text-left px-2 py-1 rounded text-[9px] font-mono tracking-wide truncate transition-all"
+              className="text-left px-2 py-1.5 rounded-lg text-[9px] font-medium tracking-wide truncate transition-all"
               style={{
-                background: chatSensor === s ? "rgba(0,245,255,0.1)" : "transparent",
-                color: chatSensor === s ? "#00f5ff" : "#475569",
-                border: `1px solid ${chatSensor === s ? "rgba(0,245,255,0.3)" : "transparent"}`,
+                background: chatSensor === s ? "#eff6ff" : "transparent",
+                color: chatSensor === s ? "#2563eb" : "#64748b",
+                border: `1px solid ${chatSensor === s ? "#bfdbfe" : "transparent"}`,
               }}
             >
               {s === offlineSensor ? (
@@ -95,15 +95,14 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
           ))}
         </div>
 
-        {/* Divider */}
-        <div className="border-t border-[rgba(0,245,255,0.08)]" />
+        <div className="border-t border-[#f1f5f9]" />
 
         {/* Metric rows */}
         <div className="flex flex-col gap-2">
           {snap.offline ? (
             <div className="text-center py-3">
-              <WifiOff className="w-5 h-5 text-[#475569] mx-auto mb-1" />
-              <span className="text-[9px] font-mono text-[#475569] tracking-widest">SENSOR OFFLINE</span>
+              <WifiOff className="w-5 h-5 text-[#94a3b8] mx-auto mb-1" />
+              <span className="text-[9px] font-medium text-[#94a3b8] tracking-wide">Sensor Offline</span>
             </div>
           ) : (
             METRICS.map((m) => {
@@ -111,16 +110,16 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
               const col = STATUS_COLORS[reading.status];
               return (
                 <div key={m} className="flex items-center justify-between gap-1">
-                  <span className="text-[9px] font-mono tracking-wider shrink-0" style={{ color: METRIC_COLORS[m] }}>
+                  <span className="text-[9px] font-medium tracking-wider shrink-0" style={{ color: METRIC_COLORS[m] }}>
                     {m}
                   </span>
                   <div className="flex items-center gap-1 ml-auto">
-                    <span className="text-[10px] font-mono tabular-nums" style={{ color: col }}>
+                    <span className="text-[10px] tabular-nums" style={{ color: col, fontFamily: "DM Mono, monospace" }}>
                       {reading.value.toFixed(m === "TDS" ? 0 : 2)}{reading.unit}
                     </span>
                     <span
-                      className="text-[8px] font-mono px-1 py-0.5 rounded shrink-0"
-                      style={{ color: col, background: `${col}18`, border: `1px solid ${col}30` }}
+                      className="text-[8px] font-medium px-1 py-0.5 rounded shrink-0"
+                      style={{ color: col, background: `${col}14`, border: `1px solid ${col}28` }}
                     >
                       {reading.status}
                     </span>
@@ -134,8 +133,8 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
         {/* Rain event indicator */}
         {rainEvent.active && (
           <div
-            className="rounded-lg px-2 py-1.5 flex items-center gap-1.5 text-[9px] font-mono text-[#60a5fa] tracking-wider"
-            style={{ background: "rgba(96,165,250,0.1)", border: "1px solid rgba(96,165,250,0.3)" }}
+            className="rounded-lg px-2 py-1.5 flex items-center gap-1.5 text-[9px] font-medium text-blue-600 tracking-wide"
+            style={{ background: "#eff6ff", border: "1px solid #bfdbfe" }}
           >
             <span>🌧</span>
             <span>Rain event active</span>
@@ -146,12 +145,12 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
       {/* Active anomalies panel */}
       {activeAnomalies.length > 0 && (
         <div
-          className="rounded-xl border p-3 flex flex-col gap-2"
-          style={{ background: "#0a1628", borderColor: "rgba(255,45,85,0.2)" }}
+          className="rounded-xl border bg-white p-3 flex flex-col gap-2"
+          style={{ borderColor: "#fca5a5", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
         >
           <div className="flex items-center gap-2">
-            <AlertTriangle className="w-3 h-3 text-[#ff2d55]" />
-            <span className="text-[10px] font-mono text-[#ff2d55] tracking-widest uppercase">
+            <AlertTriangle className="w-3 h-3 text-[#dc2626]" />
+            <span className="text-[10px] font-semibold text-[#dc2626] tracking-wide">
               {activeAnomalies.length} Active Alert{activeAnomalies.length !== 1 ? "s" : ""}
             </span>
           </div>
@@ -161,7 +160,7 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
               return (
                 <div key={a.id} className="flex items-start gap-1.5">
                   <div className="w-1 h-1 rounded-full mt-1.5 shrink-0" style={{ background: sc }} />
-                  <span className="text-[9px] font-mono text-[#94a3b8] leading-tight">
+                  <span className="text-[9px] font-medium text-[#64748b] leading-tight">
                     {a.metric} {a.value.toFixed(2)} — {a.severity}
                   </span>
                 </div>
@@ -173,8 +172,8 @@ function LiveReadingsSidebar({ chatSensor, onSensorChange }: SidebarProps) {
 
       {/* Connection status */}
       <div className="flex items-center gap-1.5 px-1">
-        <Wifi className="w-3 h-3 text-[#39ff14]" />
-        <span className="text-[9px] font-mono text-[#334155] tracking-wider">All sensors connected</span>
+        <Wifi className="w-3 h-3 text-[#16a34a]" />
+        <span className="text-[9px] font-medium text-[#94a3b8] tracking-wide">All sensors connected</span>
       </div>
     </aside>
   );
@@ -187,12 +186,10 @@ export function Assistant() {
   const qc = useQueryClient();
   const createConv = useCreateAnthropicConversation();
 
-  // Persisted state — read from module store on mount
   const [messages, setMessages] = useState<ChatMessage[]>(() => getConvStore().messages);
   const [convId, setConvId] = useState<number | null>(() => getConvStore().convId);
   const [chatSensor, setChatSensor] = useState<SensorName>(() => getConvStore().chatSensor);
 
-  // Transient state
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -200,12 +197,10 @@ export function Assistant() {
   const bottomRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sync state changes back to the module store
   useEffect(() => { setConvStore({ messages }); }, [messages]);
   useEffect(() => { setConvStore({ convId }); }, [convId]);
   useEffect(() => { setConvStore({ chatSensor }); }, [chatSensor]);
 
-  // Auto-scroll on new messages
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, isTyping]);
@@ -304,7 +299,6 @@ Answer questions about water quality, explain sensor readings, suggest remediati
         }
       }
 
-      // Mark streaming done
       setMessages((prev) => {
         const updated = [...prev];
         const idx = updated.findIndex((m) => m.id === assistantId);
@@ -341,26 +335,26 @@ Answer questions about water quality, explain sensor readings, suggest remediati
         {/* Header */}
         <div className="flex items-center justify-between mb-3 shrink-0">
           <div className="flex items-center gap-2">
-            <Bot className="w-5 h-5 text-[#00f5ff]" />
+            <Bot className="w-5 h-5 text-[#2563eb]" />
             <span
               style={{ fontFamily: "var(--app-font-display)" }}
-              className="text-[#00f5ff] text-sm tracking-widest uppercase"
+              className="text-[#2563eb] text-sm font-bold"
             >
               AquaSense AI
             </span>
-            <span className="text-[#334155] text-[10px] font-mono tracking-wider hidden sm:block">
+            <span className="text-[#94a3b8] text-[10px] hidden sm:block" style={{ fontFamily: "DM Mono, monospace" }}>
               claude-sonnet-4-5
             </span>
           </div>
           <div className="flex items-center gap-2">
             {messages.length > 0 && (
-              <span className="text-[#334155] text-[10px] font-mono">
+              <span className="text-[#94a3b8] text-[10px]" style={{ fontFamily: "DM Mono, monospace" }}>
                 {msgCount} msg{msgCount !== 1 ? "s" : ""}
               </span>
             )}
             <button
               onClick={clearChat}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded text-[10px] font-mono text-[#64748b] hover:text-[#e2e8f0] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium text-[#64748b] hover:text-[#0f172a] border border-[#e2e8f0] hover:border-[#cbd5e1] transition-all"
               data-testid="clear-chat"
             >
               <Trash2 className="w-3.5 h-3.5" />
@@ -372,7 +366,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
         {/* Messages */}
         <div
           className="flex-1 overflow-y-auto space-y-4 pr-1 min-h-0"
-          style={{ scrollbarWidth: "thin", scrollbarColor: "rgba(0,245,255,0.15) transparent" }}
+          style={{ scrollbarWidth: "thin", scrollbarColor: "#e2e8f0 transparent" }}
           data-testid="chat-messages"
         >
           {messages.length === 0 && (
@@ -384,15 +378,14 @@ Answer questions about water quality, explain sensor readings, suggest remediati
               <motion.div
                 animate={{ scale: [1, 1.06, 1] }}
                 transition={{ repeat: Infinity, duration: 3 }}
-                className="w-16 h-16 rounded-full border flex items-center justify-center"
-                style={{ borderColor: "rgba(0,245,255,0.3)", background: "rgba(0,245,255,0.05)" }}
+                className="w-16 h-16 rounded-full border border-[#bfdbfe] bg-[#eff6ff] flex items-center justify-center"
               >
-                <Bot className="w-8 h-8 text-[#00f5ff]" />
+                <Bot className="w-8 h-8 text-[#2563eb]" />
               </motion.div>
-              <p className="text-[#e2e8f0] font-mono text-sm tracking-wider">
+              <p className="text-[#0f172a] font-medium text-sm">
                 Ask me about your water quality
               </p>
-              <p className="text-[#64748b] font-mono text-xs">
+              <p className="text-[#64748b] text-xs">
                 I have real-time access to {chatSensor} sensor readings
               </p>
             </motion.div>
@@ -413,43 +406,43 @@ Answer questions about water quality, explain sensor readings, suggest remediati
                     <div
                       className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5"
                       style={{
-                        background: emergency ? "rgba(255,45,85,0.15)" : "rgba(0,245,255,0.1)",
-                        border: `1px solid ${emergency ? "rgba(255,45,85,0.5)" : "rgba(0,245,255,0.3)"}`,
+                        background: emergency ? "#fef2f2" : "#eff6ff",
+                        border: `1px solid ${emergency ? "#fca5a5" : "#bfdbfe"}`,
                       }}
                     >
                       {emergency
-                        ? <AlertTriangle className="w-4 h-4 text-[#ff2d55]" />
-                        : <Bot className="w-4 h-4 text-[#00f5ff]" />}
+                        ? <AlertTriangle className="w-4 h-4 text-[#dc2626]" />
+                        : <Bot className="w-4 h-4 text-[#2563eb]" />}
                     </div>
                   )}
 
                   <div
-                    className={`max-w-[82%] rounded-xl px-4 py-3 text-sm font-mono leading-relaxed whitespace-pre-wrap ${emergency ? "animate-pulse-danger" : ""}`}
+                    className={`max-w-[82%] rounded-xl px-4 py-3 text-sm leading-relaxed whitespace-pre-wrap ${emergency ? "animate-pulse-danger" : ""}`}
                     style={
                       msg.role === "user"
                         ? {
-                            background: "rgba(0,245,255,0.1)",
-                            border: "1px solid rgba(0,245,255,0.3)",
-                            color: "#e2e8f0",
+                            background: "#eff6ff",
+                            border: "1px solid #bfdbfe",
+                            color: "#0f172a",
+                            fontFamily: "Inter, sans-serif",
                           }
                         : emergency
                         ? {
-                            background: "rgba(255,45,85,0.07)",
-                            border: "1px solid rgba(255,45,85,0.5)",
-                            color: "#e2e8f0",
-                            boxShadow: "0 0 24px rgba(255,45,85,0.2), inset 0 0 8px rgba(255,45,85,0.05)",
+                            background: "#fef2f2",
+                            border: "1px solid #fca5a5",
+                            color: "#0f172a",
                           }
                         : {
-                            background: "#0d1f3c",
-                            border: "1px solid rgba(255,255,255,0.08)",
-                            color: "#e2e8f0",
+                            background: "#ffffff",
+                            border: "1px solid #e2e8f0",
+                            color: "#374151",
                           }
                     }
                   >
                     {emergency && (
-                      <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-[rgba(255,45,85,0.3)]">
-                        <AlertTriangle className="w-3 h-3 text-[#ff2d55]" />
-                        <span className="text-[9px] font-bold tracking-widest text-[#ff2d55]">
+                      <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-red-200">
+                        <AlertTriangle className="w-3 h-3 text-[#dc2626]" />
+                        <span className="text-[9px] font-bold tracking-widest text-[#dc2626]">
                           EMERGENCY ALERT
                         </span>
                       </div>
@@ -457,7 +450,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
                     {msg.content}
                     {msg.streaming && (
                       <motion.span
-                        className="inline-block w-2 h-4 ml-1 bg-[#00f5ff]"
+                        className="inline-block w-2 h-4 ml-1 bg-[#2563eb] rounded-sm"
                         animate={{ opacity: [1, 0] }}
                         transition={{ repeat: Infinity, duration: 0.8 }}
                       />
@@ -466,13 +459,9 @@ Answer questions about water quality, explain sensor readings, suggest remediati
 
                   {msg.role === "user" && (
                     <div
-                      className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5"
-                      style={{
-                        background: "rgba(0,245,255,0.15)",
-                        border: "1px solid rgba(0,245,255,0.3)",
-                      }}
+                      className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center mt-0.5 bg-[#eff6ff] border border-[#bfdbfe]"
                     >
-                      <User className="w-4 h-4 text-[#00f5ff]" />
+                      <User className="w-4 h-4 text-[#2563eb]" />
                     </div>
                   )}
                 </motion.div>
@@ -483,21 +472,17 @@ Answer questions about water quality, explain sensor readings, suggest remediati
           {/* Typing indicator */}
           {isTyping && messages[messages.length - 1]?.role !== "assistant" && (
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-3">
-              <div
-                className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center"
-                style={{ background: "rgba(0,245,255,0.1)", border: "1px solid rgba(0,245,255,0.3)" }}
-              >
-                <Bot className="w-4 h-4 text-[#00f5ff]" />
+              <div className="w-7 h-7 rounded-full shrink-0 flex items-center justify-center bg-[#eff6ff] border border-[#bfdbfe]">
+                <Bot className="w-4 h-4 text-[#2563eb]" />
               </div>
               <div
-                className="rounded-xl px-4 py-3 flex items-center gap-1.5"
-                style={{ background: "#0d1f3c", border: "1px solid rgba(255,255,255,0.08)" }}
+                className="rounded-xl px-4 py-3 flex items-center gap-1.5 bg-white border border-[#e2e8f0]"
                 data-testid="typing-indicator"
               >
                 {[0, 1, 2].map((i) => (
                   <motion.div
                     key={i}
-                    className="w-2 h-2 rounded-full bg-[#00f5ff]"
+                    className="w-2 h-2 rounded-full bg-[#2563eb]"
                     animate={{ y: [0, -6, 0] }}
                     transition={{ repeat: Infinity, duration: 0.9, delay: i * 0.2 }}
                   />
@@ -508,7 +493,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
 
           {error && (
             <div
-              className="text-[#ff2d55] text-xs font-mono px-4 py-2 rounded border border-[rgba(255,45,85,0.3)] bg-[rgba(255,45,85,0.05)]"
+              className="text-[#dc2626] text-xs px-4 py-2 rounded-lg border border-[#fca5a5] bg-[#fef2f2]"
               data-testid="chat-error"
             >
               Error: {error}
@@ -525,8 +510,7 @@ Answer questions about water quality, explain sensor readings, suggest remediati
               key={prompt}
               onClick={() => sendMessage(prompt)}
               disabled={isTyping}
-              className="px-3 py-1.5 rounded-full text-[10px] font-mono tracking-wide border transition-all hover:bg-[rgba(0,245,255,0.08)] hover:text-[#00f5ff] hover:border-[rgba(0,245,255,0.4)] disabled:opacity-40"
-              style={{ borderColor: "rgba(0,245,255,0.18)", color: "#64748b" }}
+              className="px-3 py-1.5 rounded-full text-xs font-medium border border-[#e2e8f0] text-[#64748b] transition-all hover:bg-[#eff6ff] hover:text-[#2563eb] hover:border-[#bfdbfe] disabled:opacity-40"
               data-testid={`quick-prompt-${prompt.slice(0, 20).replace(/\s+/g, "-").toLowerCase()}`}
             >
               {prompt}
@@ -536,8 +520,8 @@ Answer questions about water quality, explain sensor readings, suggest remediati
 
         {/* Input */}
         <div
-          className="shrink-0 flex gap-2 items-center rounded-xl border p-2"
-          style={{ background: "#0d1f3c", borderColor: "rgba(0,245,255,0.2)" }}
+          className="shrink-0 flex gap-2 items-center rounded-xl border p-2 bg-white"
+          style={{ borderColor: "#e2e8f0" }}
         >
           <input
             ref={inputRef}
@@ -546,39 +530,30 @@ Answer questions about water quality, explain sensor readings, suggest remediati
             onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage(input)}
             placeholder="Ask about water quality..."
             disabled={isTyping}
-            className="flex-1 bg-transparent text-[#e2e8f0] text-sm font-mono placeholder:text-[#334155] outline-none px-2 disabled:opacity-50"
+            className="flex-1 bg-transparent text-[#0f172a] text-sm placeholder:text-[#cbd5e1] outline-none px-2 disabled:opacity-50"
             data-testid="chat-input"
           />
           <button
             onClick={() => sendMessage(input)}
             disabled={!input.trim() || isTyping}
-            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 hover:bg-[rgba(0,245,255,0.3)]"
-            style={{ background: "rgba(0,245,255,0.18)", border: "1px solid rgba(0,245,255,0.4)" }}
+            className="w-9 h-9 rounded-lg flex items-center justify-center transition-all disabled:opacity-40 bg-[#2563eb] hover:bg-[#1d4ed8] text-white"
             data-testid="send-button"
           >
-            <Send className="w-4 h-4 text-[#00f5ff]" />
+            <Send className="w-4 h-4" />
           </button>
         </div>
 
         {/* Powered by Claude badge */}
         <div className="shrink-0 flex items-center justify-between mt-1.5 px-1">
-          <span className="text-[#1e293b] text-[9px] font-mono tracking-wider">
-            {msgCount > 0 ? `${msgCount} message${msgCount !== 1 ? "s" : ""} this session` : "Start a conversation below"}
+          <span className="text-[#94a3b8] text-[9px] tracking-wide">
+            Powered by Claude · Anthropic
           </span>
-          <div className="flex items-center gap-1.5">
-            <span className="text-[#334155] text-[9px] font-mono tracking-widest">POWERED BY</span>
-            <span
-              className="text-[10px] font-bold tracking-widest"
-              style={{ color: "#475569", fontFamily: "var(--app-font-display)" }}
-            >
-              CLAUDE
-            </span>
-            <span className="text-[#1e293b] text-[9px] font-mono">· Anthropic</span>
-          </div>
+          <span className="text-[#94a3b8] text-[9px]" style={{ fontFamily: "DM Mono, monospace" }}>
+            {msgCount} msg{msgCount !== 1 ? "s" : ""}
+          </span>
         </div>
       </div>
 
-      {/* ── Desktop sidebar ───────────────────────────────────────────── */}
       <LiveReadingsSidebar chatSensor={chatSensor} onSensorChange={setChatSensor} />
     </div>
   );

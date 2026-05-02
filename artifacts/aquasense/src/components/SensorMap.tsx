@@ -4,12 +4,12 @@ import { SensorName, SENSORS, SensorSnapshot } from "../hooks/useSensorData";
 import { StatusType } from "../utils/thresholds";
 
 const STATUS_COLORS: Record<StatusType, string> = {
-  SAFE: "#39ff14",
-  WARNING: "#ffaa00",
-  DANGER: "#ff2d55",
+  SAFE: "#16a34a",
+  WARNING: "#d97706",
+  DANGER: "#dc2626",
 };
 
-const OFFLINE_COLOR = "#475569";
+const OFFLINE_COLOR = "#cbd5e1";
 
 const SENSOR_POSITIONS: Record<SensorName, { x: string; y: string }> = {
   "River Station A": { x: "20%", y: "30%" },
@@ -26,7 +26,7 @@ interface SensorMapProps {
 }
 
 function getSensorOverallStatus(snap: SensorSnapshot): StatusType {
-  if (snap.offline) return "SAFE"; // offline sensors don't contribute status
+  if (snap.offline) return "SAFE";
   const statuses = [snap.pH.status, snap.Turbidity.status, snap.Temperature.status, snap.DO.status, snap.TDS.status];
   if (statuses.includes("DANGER")) return "DANGER";
   if (statuses.includes("WARNING")) return "WARNING";
@@ -38,42 +38,28 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
 
   return (
     <div
-      className="rounded-xl border p-4"
+      className="rounded-xl border bg-white p-4"
       style={{
-        background: "#0d1f3c",
-        borderColor: "rgba(0,245,255,0.15)",
-        boxShadow: "0 0 20px rgba(0,245,255,0.05)",
+        borderColor: "#e2e8f0",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
       }}
       data-testid="sensor-map"
     >
       <div className="flex items-center gap-2 mb-4">
-        <Radio className="w-4 h-4 text-[#00f5ff]" />
-        <span className="text-[#e2e8f0] text-xs font-mono tracking-widest uppercase">
-          Sensor Network
-        </span>
+        <Radio className="w-4 h-4 text-[#2563eb]" />
+        <span className="text-[#0f172a] text-sm font-semibold">Sensor Network</span>
 
-        {/* Rain event indicator */}
         <AnimatePresence>
           {isRaining && (
             <motion.div
               key="rain-badge"
-              initial={{ opacity: 0, scale: 0.8 }}
+              initial={{ opacity: 0, scale: 0.85 }}
               animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.8 }}
-              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-mono font-bold ml-1"
-              style={{
-                color: "#60a5fa",
-                background: "rgba(96,165,250,0.12)",
-                border: "1px solid rgba(96,165,250,0.3)",
-              }}
+              exit={{ opacity: 0, scale: 0.85 }}
+              className="flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium ml-1 bg-blue-50 border border-blue-200 text-blue-600"
             >
-              <motion.span
-                animate={{ opacity: [1, 0.4, 1] }}
-                transition={{ repeat: Infinity, duration: 1.2 }}
-              >
-                🌧
-              </motion.span>
-              RAIN EVENT
+              <motion.span animate={{ opacity: [1, 0.5, 1] }} transition={{ repeat: Infinity, duration: 1.4 }}>🌧</motion.span>
+              Rain
             </motion.div>
           )}
         </AnimatePresence>
@@ -81,10 +67,10 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
         {selected && (
           <button
             onClick={() => onSelect(null)}
-            className="ml-auto text-[10px] text-[#64748b] hover:text-[#00f5ff] font-mono tracking-wider transition-colors"
+            className="ml-auto text-xs font-medium text-[#2563eb] hover:text-[#1d4ed8] transition-colors"
             data-testid="clear-sensor-filter"
           >
-            CLEAR FILTER
+            Clear filter
           </button>
         )}
       </div>
@@ -94,14 +80,12 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
         className="relative w-full rounded-lg overflow-hidden"
         style={{
           height: 160,
-          background: isRaining
-            ? "radial-gradient(ellipse at 50% 50%, rgba(96,165,250,0.06) 0%, transparent 70%), #020817"
-            : "radial-gradient(ellipse at 50% 50%, rgba(0,245,255,0.04) 0%, transparent 70%), #020817",
-          border: "1px solid rgba(0,245,255,0.08)",
+          background: isRaining ? "#eff6ff" : "#f8fafc",
+          border: "1px solid #e2e8f0",
           transition: "background 1s ease",
         }}
       >
-        {/* Animated rain overlay */}
+        {/* Rain overlay */}
         <AnimatePresence>
           {isRaining && (
             <motion.div
@@ -111,8 +95,7 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
               exit={{ opacity: 0 }}
               className="absolute inset-0 pointer-events-none"
               style={{
-                backgroundImage:
-                  "repeating-linear-gradient(90deg, transparent 0px, transparent 18px, rgba(96,165,250,0.06) 18px, rgba(96,165,250,0.06) 19px)",
+                backgroundImage: "repeating-linear-gradient(90deg, transparent 0px, transparent 18px, rgba(37,99,235,0.04) 18px, rgba(37,99,235,0.04) 19px)",
               }}
             />
           )}
@@ -121,24 +104,13 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
         {/* Grid lines */}
         <svg className="absolute inset-0 w-full h-full" preserveAspectRatio="none">
           {Array.from({ length: 6 }, (_, i) => (
-            <line
-              key={`h-${i}`}
-              x1="0" y1={`${(i + 1) * (100 / 7)}%`}
-              x2="100%" y2={`${(i + 1) * (100 / 7)}%`}
-              stroke="rgba(0,245,255,0.05)" strokeWidth="1"
-            />
+            <line key={`h-${i}`} x1="0" y1={`${(i + 1) * (100 / 7)}%`} x2="100%" y2={`${(i + 1) * (100 / 7)}%`} stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
           ))}
           {Array.from({ length: 8 }, (_, i) => (
-            <line
-              key={`v-${i}`}
-              x1={`${(i + 1) * (100 / 9)}%`} y1="0"
-              x2={`${(i + 1) * (100 / 9)}%`} y2="100%"
-              stroke="rgba(0,245,255,0.05)" strokeWidth="1"
-            />
+            <line key={`v-${i}`} x1={`${(i + 1) * (100 / 9)}%`} y1="0" x2={`${(i + 1) * (100 / 9)}%`} y2="100%" stroke="rgba(0,0,0,0.04)" strokeWidth="1" />
           ))}
-          {/* Connection lines */}
-          <line x1="20%" y1="30%" x2="55%" y2="55%" stroke="rgba(0,245,255,0.15)" strokeWidth="1" strokeDasharray="4,4" />
-          <line x1="55%" y1="55%" x2="78%" y2="25%" stroke="rgba(0,245,255,0.15)" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="20%" y1="30%" x2="55%" y2="55%" stroke="rgba(37,99,235,0.2)" strokeWidth="1" strokeDasharray="4,4" />
+          <line x1="55%" y1="55%" x2="78%" y2="25%" stroke="rgba(37,99,235,0.2)" strokeWidth="1" strokeDasharray="4,4" />
         </svg>
 
         {SENSORS.map((sensor) => {
@@ -157,47 +129,35 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
               style={{ left: pos.x, top: pos.y }}
               data-testid={`sensor-node-${sensor.toLowerCase().replace(/\s+/g, "-")}`}
             >
-              {/* Pulse ring — suppressed when offline */}
               {!isOffline && (
                 <motion.div
-                  className="absolute inset-0 rounded-full"
-                  animate={{ scale: [1, 2.5], opacity: [0.6, 0] }}
+                  className="absolute rounded-full"
+                  animate={{ scale: [1, 2.8], opacity: [0.4, 0] }}
                   transition={{ repeat: Infinity, duration: 2, ease: "easeOut" }}
                   style={{ backgroundColor: color, width: 12, height: 12, left: -6, top: -6 }}
                 />
               )}
-
-              {/* Node */}
               <motion.div
-                className="relative w-3 h-3 rounded-full border"
+                className="relative w-3 h-3 rounded-full border-2 bg-white"
                 style={{
-                  backgroundColor: isOffline ? "transparent" : color,
                   borderColor: color,
-                  boxShadow: isOffline ? "none" : `0 0 8px ${color}`,
                   outline: isSelected ? `2px solid ${color}` : undefined,
                   outlineOffset: 3,
                 }}
-                animate={isOffline ? { opacity: [0.3, 0.8, 0.3] } : {}}
+                animate={isOffline ? { opacity: [0.4, 0.9, 0.4] } : {}}
                 transition={isOffline ? { repeat: Infinity, duration: 1.5 } : {}}
                 whileHover={{ scale: 1.5 }}
               />
-
-              {/* Offline X icon */}
               {isOffline && (
                 <div className="absolute -top-1.5 -right-1.5">
-                  <WifiOff className="w-2.5 h-2.5 text-[#475569]" />
+                  <WifiOff className="w-2.5 h-2.5 text-[#94a3b8]" />
                 </div>
               )}
-
-              {/* Label tooltip */}
-              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-                <div
-                  className="px-2 py-1 rounded text-[10px] font-mono"
-                  style={{ background: "#0d1f3c", border: `1px solid ${color}40`, color: "#e2e8f0" }}
-                >
+              <div className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10">
+                <div className="px-2 py-1 rounded-lg text-xs font-medium bg-white border border-[#e2e8f0] text-[#0f172a] shadow-md">
                   {sensor}
-                  <span className="ml-2 font-bold" style={{ color }}>
-                    {isOffline ? "OFFLINE" : status}
+                  <span className="ml-2 font-semibold" style={{ color }}>
+                    {isOffline ? "Offline" : status}
                   </span>
                 </div>
               </div>
@@ -219,27 +179,18 @@ export function SensorMap({ readings, selected, onSelect, rainEvent, offlineSens
             <button
               key={sensor}
               onClick={() => onSelect(isSelected ? null : sensor)}
-              className="flex items-center gap-2 transition-opacity"
+              className="flex items-center gap-1.5 transition-opacity"
               style={{ opacity: selected && !isSelected ? 0.4 : 1 }}
             >
-              {isOffline ? (
-                <motion.span
-                  className="w-2 h-2 rounded-full border"
-                  style={{ borderColor: OFFLINE_COLOR }}
-                  animate={{ opacity: [0.3, 0.8, 0.3] }}
-                  transition={{ repeat: Infinity, duration: 1.5 }}
-                />
-              ) : (
-                <motion.span
-                  className="w-2 h-2 rounded-full"
-                  style={{ backgroundColor: color }}
-                  animate={{ opacity: [1, 0.4, 1] }}
-                  transition={{ repeat: Infinity, duration: 2 }}
-                />
-              )}
-              <span className="text-[10px] font-mono" style={{ color: isOffline ? OFFLINE_COLOR : "#64748b" }}>
+              <motion.span
+                className="w-2 h-2 rounded-full"
+                style={{ backgroundColor: color, border: isOffline ? `1px solid ${color}` : undefined, background: isOffline ? "white" : color }}
+                animate={{ opacity: isOffline ? [0.4, 0.9, 0.4] : [1, 0.5, 1] }}
+                transition={{ repeat: Infinity, duration: isOffline ? 1.5 : 2.5 }}
+              />
+              <span className="text-xs font-medium text-[#64748b]">
                 {sensor}
-                {isOffline && <span className="ml-1 text-[#475569]">(offline)</span>}
+                {isOffline && <span className="ml-1 text-[#94a3b8]">(offline)</span>}
               </span>
             </button>
           );

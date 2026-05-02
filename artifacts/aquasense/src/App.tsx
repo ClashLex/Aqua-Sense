@@ -20,22 +20,15 @@ function AppShell() {
   const [location] = useLocation();
 
   return (
-    <div
-      className="min-h-screen bg-[#020817]"
-      style={{
-        backgroundImage:
-          "linear-gradient(rgba(0,245,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(0,245,255,0.025) 1px, transparent 1px)",
-        backgroundSize: "52px 52px",
-      }}
-    >
+    <div className="min-h-screen bg-[#f8fafc]">
       <Navbar isLive={true} lastUpdated={lastUpdated} alertCount={activeAlerts} />
       <AnimatePresence mode="wait" initial={false}>
         <motion.main
           key={location}
-          initial={{ opacity: 0, y: 14 }}
+          initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          exit={{ opacity: 0, y: -8 }}
-          transition={{ duration: 0.18, ease: [0.25, 0.46, 0.45, 0.94] }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.16, ease: [0.25, 0.46, 0.45, 0.94] }}
           className="pt-14 pb-20 md:pb-8 px-4 md:px-6 max-w-[1600px] mx-auto py-6"
         >
           <Switch>

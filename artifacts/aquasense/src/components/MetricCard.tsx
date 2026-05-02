@@ -16,15 +16,27 @@ interface MetricCardProps {
 }
 
 const STATUS_COLORS: Record<StatusType, string> = {
-  SAFE: "#39ff14",
-  WARNING: "#ffaa00",
-  DANGER: "#ff2d55",
+  SAFE: "#16a34a",
+  WARNING: "#d97706",
+  DANGER: "#dc2626",
 };
 
 const STATUS_BG: Record<StatusType, string> = {
-  SAFE: "rgba(57,255,20,0.08)",
-  WARNING: "rgba(255,170,0,0.08)",
-  DANGER: "rgba(255,45,85,0.08)",
+  SAFE: "#f0fdf4",
+  WARNING: "#fffbeb",
+  DANGER: "#fef2f2",
+};
+
+const STATUS_BORDER: Record<StatusType, string> = {
+  SAFE: "#bbf7d0",
+  WARNING: "#fde68a",
+  DANGER: "#fecaca",
+};
+
+const STATUS_BADGE_BG: Record<StatusType, string> = {
+  SAFE: "#dcfce7",
+  WARNING: "#fef3c7",
+  DANGER: "#fee2e2",
 };
 
 function useCountUp(target: number, duration = 600) {
@@ -52,57 +64,60 @@ function useCountUp(target: number, duration = 600) {
 
 export function MetricCard({ metric, label, value, unit, status, history, index, offline = false }: MetricCardProps) {
   const displayed = useCountUp(value);
-  const color = offline ? "#475569" : STATUS_COLORS[status];
-  const bg = offline ? "rgba(71,85,105,0.06)" : STATUS_BG[status];
+  const color = offline ? "#94a3b8" : STATUS_COLORS[status];
   const isDanger = !offline && status === "DANGER";
-  const isWarning = !offline && status === "WARNING";
   const decimals = metric === "TDS" ? 0 : 2;
-
   const chartData = history.map((v, i) => ({ i, v }));
   const gradId = `spark-${metric}`;
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
+      initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.05, duration: 0.4 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
       data-testid={`metric-card-${metric.toLowerCase()}`}
-      className={`relative rounded-xl border p-4 overflow-hidden ${isDanger ? "animate-pulse-danger" : ""}`}
+      className={`relative rounded-xl border p-4 overflow-hidden bg-white ${isDanger ? "animate-pulse-danger" : ""}`}
       style={{
-        background: `linear-gradient(155deg, #0a1628 0%, ${bg} 100%)`,
         borderColor: offline
-          ? "rgba(71,85,105,0.25)"
+          ? "#e2e8f0"
           : isDanger
-          ? "rgba(255,45,85,0.35)"
-          : isWarning
-          ? "rgba(255,170,0,0.3)"
-          : `${color}28`,
-        boxShadow: offline
-          ? "0 0 6px rgba(71,85,105,0.08)"
-          : isDanger
-          ? undefined // handled by pulse-danger CSS
-          : `0 0 12px ${color}12, inset 0 1px 0 rgba(255,255,255,0.03)`,
-        opacity: offline ? 0.6 : 1,
+          ? "#fca5a5"
+          : status === "WARNING"
+          ? "#fde68a"
+          : "#e2e8f0",
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
+        opacity: offline ? 0.65 : 1,
       }}
     >
-      {/* Header row */}
+      {/* Status tint bar */}
+      {!offline && (
+        <div
+          className="absolute top-0 left-0 right-0 h-0.5 rounded-t-xl"
+          style={{ background: color }}
+        />
+      )}
+
+      {/* Header */}
       <div className="flex items-center justify-between mb-2">
-        <span className="text-[#64748b] text-[10px] font-mono tracking-widest uppercase leading-none">
+        <span className="text-[#64748b] text-xs font-medium tracking-wide">
           {label}
         </span>
         {offline ? (
           <span
-            className="flex items-center gap-1 text-[10px] font-mono font-bold tracking-widest px-1.5 py-0.5 rounded-full"
-            style={{ color: "#475569", backgroundColor: "rgba(71,85,105,0.12)", border: "1px solid rgba(71,85,105,0.3)" }}
+            className="flex items-center gap-1 text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-[#f1f5f9] text-[#94a3b8] border border-[#e2e8f0]"
             data-testid={`status-${metric.toLowerCase()}`}
           >
             <WifiOff className="w-2.5 h-2.5" />
-            OFFLINE
+            Offline
           </span>
         ) : (
           <span
-            className="text-[10px] font-mono font-bold tracking-widest px-1.5 py-0.5 rounded-full"
-            style={{ color, backgroundColor: bg, border: `1px solid ${color}40` }}
+            className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+            style={{
+              color,
+              backgroundColor: STATUS_BADGE_BG[status],
+              border: `1px solid ${STATUS_BORDER[status]}`,
+            }}
             data-testid={`status-${metric.toLowerCase()}`}
           >
             {status}
@@ -114,8 +129,8 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
       <div className="flex items-end gap-1 mb-3">
         {offline ? (
           <span
-            className="text-3xl font-bold leading-none"
-            style={{ fontFamily: "var(--app-font-display)", color: "#334155" }}
+            className="text-3xl font-semibold leading-none text-[#cbd5e1]"
+            style={{ fontFamily: "var(--app-font-mono)" }}
             data-testid={`value-${metric.toLowerCase()}`}
           >
             —
@@ -123,26 +138,26 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
         ) : (
           <>
             <span
-              className="text-3xl font-bold leading-none"
-              style={{ fontFamily: "var(--app-font-display)", color }}
+              className="text-3xl font-semibold leading-none"
+              style={{ fontFamily: "var(--app-font-mono)", color }}
               data-testid={`value-${metric.toLowerCase()}`}
             >
               {displayed.toFixed(decimals)}
             </span>
             {unit && (
-              <span className="text-[#64748b] text-sm font-mono mb-0.5">{unit.trim()}</span>
+              <span className="text-[#94a3b8] text-sm font-mono mb-0.5">{unit.trim()}</span>
             )}
           </>
         )}
       </div>
 
-      {/* Recharts sparkline */}
-      <div style={{ height: 44, marginLeft: -4, marginRight: -4 }} data-testid={`sparkline-${metric.toLowerCase()}`}>
-        <ResponsiveContainer width="100%" height={44}>
+      {/* Sparkline */}
+      <div style={{ height: 40, marginLeft: -4, marginRight: -4 }} data-testid={`sparkline-${metric.toLowerCase()}`}>
+        <ResponsiveContainer width="100%" height={40}>
           <AreaChart data={chartData} margin={{ top: 2, right: 2, bottom: 0, left: 2 }}>
             <defs>
               <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor={color} stopOpacity={offline ? 0.1 : 0.4} />
+                <stop offset="5%" stopColor={color} stopOpacity={offline ? 0.06 : 0.18} />
                 <stop offset="95%" stopColor={color} stopOpacity={0} />
               </linearGradient>
             </defs>
@@ -154,27 +169,19 @@ export function MetricCard({ metric, label, value, unit, status, history, index,
               fill={`url(#${gradId})`}
               dot={false}
               isAnimationActive={false}
-              strokeOpacity={offline ? 0.3 : 1}
+              strokeOpacity={offline ? 0.25 : 0.8}
             />
           </AreaChart>
         </ResponsiveContainer>
       </div>
 
-      {/* Live/offline indicator */}
-      {offline ? (
-        <motion.div
-          className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full bg-[#475569]"
-          animate={{ opacity: [0.3, 0.8, 0.3] }}
-          transition={{ repeat: Infinity, duration: 1.4 }}
-        />
-      ) : (
-        <motion.div
-          className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full"
-          style={{ backgroundColor: color }}
-          animate={{ opacity: [1, 0.25, 1] }}
-          transition={{ repeat: Infinity, duration: 2.2, delay: index * 0.28 }}
-        />
-      )}
+      {/* Live pulse dot */}
+      <motion.div
+        className="absolute top-3 right-3 w-1.5 h-1.5 rounded-full"
+        style={{ backgroundColor: offline ? "#cbd5e1" : color }}
+        animate={{ opacity: offline ? [0.3, 0.7, 0.3] : [1, 0.3, 1] }}
+        transition={{ repeat: Infinity, duration: offline ? 1.4 : 2.2, delay: index * 0.28 }}
+      />
     </motion.div>
   );
 }
