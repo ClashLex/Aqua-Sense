@@ -49,10 +49,10 @@ function AppShell() {
         <AnimatePresence mode="wait" initial={false}>
           <motion.main
             key={location}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.16, ease: [0.25, 0.46, 0.45, 0.94] }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
             className="flex-1 w-full max-w-[1280px] mx-auto px-4 sm:px-6 py-6 pb-24 md:pb-8"
           >
             <Switch>

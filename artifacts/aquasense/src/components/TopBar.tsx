@@ -25,8 +25,8 @@ export function TopBar({ title, lastUpdated, isLive, alertCount }: TopBarProps) 
       data-testid="top-bar"
     >
       <h1
-        className="text-xl font-bold leading-none"
-        style={{ fontFamily: "var(--app-font-display)", color: "var(--app-text-1)" }}
+        className="font-bold leading-none"
+        style={{ fontFamily: "var(--app-font-display)", color: "var(--app-text-1)", fontSize: "var(--text-page-title)" }}
         data-testid="page-title"
       >
         {title}

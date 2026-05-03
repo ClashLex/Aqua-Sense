@@ -72,7 +72,7 @@ export function Sidebar({ alertCount, isLive, lastUpdated }: SidebarProps) {
                 key={path}
                 href={path}
                 data-testid={`sidebar-link-${label.toLowerCase()}`}
-                className="relative flex items-center gap-3 mx-3 px-3 py-2.5 rounded-lg transition-all"
+                className="relative flex items-center gap-3 mx-3 px-3 py-2.5 rounded-lg transition-all duration-150"
                 style={{
                   background: active ? "var(--app-primary-tint)" : undefined,
                   boxShadow: active ? "inset 3px 0 0 #2563eb" : undefined,
@@ -137,7 +137,7 @@ export function Sidebar({ alertCount, isLive, lastUpdated }: SidebarProps) {
             <Link
               key={path}
               href={path}
-              className="relative flex items-center justify-center w-12 h-12 rounded-xl transition-all"
+              className="relative flex items-center justify-center w-12 h-12 rounded-xl transition-all duration-150"
               style={{
                 background: active ? "var(--app-primary-tint)" : "transparent",
                 color: active ? "#2563eb" : "var(--app-text-3)",

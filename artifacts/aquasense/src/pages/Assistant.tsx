@@ -404,8 +404,7 @@ export function Assistant() {
 
   return (
     <div
-      className="flex gap-5 overflow-hidden"
-      style={{ height: "calc(100vh - 9.5rem)" }}
+      className="flex gap-5 overflow-hidden h-[520px] md:h-[calc(100dvh-9.5rem)]"
       data-testid="assistant-page"
     >
       {/* ── Left: Chat column ─────────────────────────────────────────────── */}

@@ -188,9 +188,37 @@
   }
 }
 
+/* ── Type scale ─────────────────────────────────────────────────────────────
+   12px  captions / labels
+   14px  body text
+   16px  default / form inputs
+   20px  subheadings / card titles
+   28px  page titles
+   48px  metric numbers (DM Mono)
+──────────────────────────────────────────────────────────────────────────── */
+:root {
+  --text-caption:      12px;
+  --text-body:         14px;
+  --text-default:      16px;
+  --text-subheading:   20px;
+  --text-page-title:   28px;
+  --text-metric:       48px;
+}
+
+/* ── Global 150ms transitions on interactive elements ── */
+button,
+a,
+[role="button"],
+[role="tab"],
+[role="option"] {
+  transition-property: color, background-color, border-color, opacity, transform, box-shadow;
+  transition-duration: 150ms;
+  transition-timing-function: ease;
+}
+
 /* ── Metric card hover lift ── */
 .metric-card {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   cursor: default;
 }
 .metric-card:hover {
