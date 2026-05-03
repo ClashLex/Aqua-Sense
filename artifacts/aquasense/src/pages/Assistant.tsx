@@ -610,46 +610,54 @@ export function Assistant() {
 
         {/* Input bar — sticky at bottom */}
         <div
-          className="shrink-0 px-4 py-3 flex items-center gap-3"
-          style={{ borderTop: "1px solid var(--app-border)" }}
+          className="shrink-0 px-4 pt-3 pb-2 flex flex-col gap-2"
+          style={{
+            borderTop:  "1px solid var(--app-border)",
+            background: isDark ? "var(--app-surface)" : "#ffffff",
+          }}
         >
-          <input
-            ref={inputRef}
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage(input)}
-            placeholder="Ask about water quality…"
-            disabled={isTyping}
-            className="flex-1 text-sm outline-none px-4 py-2.5 rounded-full disabled:opacity-50"
-            style={{
-              background:   isDark ? "rgba(255,255,255,0.06)" : "#f8fafc",
-              border:       `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#e2e8f0"}`,
-              color:        "var(--app-text-1)",
-              fontFamily:   "var(--app-font-sans)",
-            }}
-            data-testid="chat-input"
-          />
-          <button
-            onClick={() => sendMessage(input)}
-            disabled={!input.trim() || isTyping}
-            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 transition-all disabled:opacity-35"
-            style={{ background: "#2563eb" }}
-            onMouseEnter={(e) => { if (!e.currentTarget.disabled) (e.currentTarget as HTMLButtonElement).style.background = "#1d4ed8"; }}
-            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#2563eb"; }}
-            data-testid="send-button"
-          >
-            <Send className="w-4 h-4 text-white" />
-          </button>
-        </div>
+          <div className="flex items-center gap-2.5">
+            <input
+              ref={inputRef}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && sendMessage(input)}
+              placeholder="Ask about water quality…"
+              disabled={isTyping}
+              className="flex-1 text-sm outline-none px-4 rounded-full disabled:opacity-50"
+              style={{
+                minHeight:  "44px",
+                background: isDark ? "rgba(255,255,255,0.06)" : "#f8fafc",
+                border:     `1px solid ${isDark ? "rgba(255,255,255,0.10)" : "#e2e8f0"}`,
+                color:      "var(--app-text-1)",
+                fontFamily: "var(--app-font-sans)",
+              }}
+              data-testid="chat-input"
+            />
+            <motion.button
+              onClick={() => sendMessage(input)}
+              disabled={!input.trim() || isTyping}
+              whileTap={{ scale: 1.18 }}
+              transition={{ type: "spring", stiffness: 500, damping: 20 }}
+              className="rounded-full flex items-center justify-center shrink-0 transition-colors disabled:opacity-35"
+              style={{ width: 44, height: 44, background: "#2563eb" }}
+              onMouseEnter={(e) => { if (!(e.currentTarget as HTMLButtonElement).disabled) (e.currentTarget as HTMLButtonElement).style.background = "#1d4ed8"; }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "#2563eb"; }}
+              data-testid="send-button"
+            >
+              <Send className="w-4 h-4 text-white" />
+            </motion.button>
+          </div>
 
-        {/* Footer */}
-        <div className="shrink-0 px-5 pb-3 flex items-center justify-between">
-          <span className="text-[9px] tracking-wide" style={{ color: "var(--app-text-3)" }}>
-            Powered by Claude · Anthropic
-          </span>
-          <span className="text-[9px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono" }}>
-            End-to-end encrypted
-          </span>
+          {/* Footer — single line */}
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] tracking-wide" style={{ color: "var(--app-text-3)" }}>
+              Powered by Claude · Anthropic
+            </span>
+            <span className="text-[10px]" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono" }}>
+              End-to-end encrypted
+            </span>
+          </div>
         </div>
       </div>
 
