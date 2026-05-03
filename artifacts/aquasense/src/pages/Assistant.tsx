@@ -568,30 +568,41 @@ export function Assistant() {
           <div ref={bottomRef} />
         </div>
 
-        {/* Quick prompts — above input */}
+        {/* Quick prompts — horizontal scrollable row */}
         <div
-          className="shrink-0 px-5 pt-3 pb-2 flex flex-wrap gap-2"
+          className="shrink-0 relative"
           style={{ borderTop: "1px solid var(--app-border)" }}
           data-testid="quick-prompts"
         >
-          {QUICK_PROMPTS.map((prompt) => (
-            <button
-              key={prompt}
-              onClick={() => sendMessage(prompt)}
-              disabled={isTyping}
-              className="px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all disabled:opacity-40"
-              style={{
-                background:  "rgba(37,99,235,0.08)",
-                color:       "#2563eb",
-                border:      "1px solid rgba(37,99,235,0.18)",
-              }}
-              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(37,99,235,0.15)"; }}
-              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(37,99,235,0.08)"; }}
-              data-testid={`quick-prompt-${prompt.slice(0, 20).replace(/\s+/g, "-").toLowerCase()}`}
-            >
-              {prompt}
-            </button>
-          ))}
+          <div
+            className="flex gap-2 overflow-x-auto px-4 py-2.5"
+            style={{ scrollbarWidth: "none", WebkitOverflowScrolling: "touch" }}
+          >
+            {QUICK_PROMPTS.map((prompt) => (
+              <button
+                key={prompt}
+                onClick={() => sendMessage(prompt)}
+                disabled={isTyping}
+                className="shrink-0 rounded-full text-[12px] font-semibold transition-all disabled:opacity-40"
+                style={{
+                  padding:    "8px 12px",
+                  background: "rgba(37,99,235,0.08)",
+                  color:      "#2563eb",
+                  border:     "1px solid rgba(37,99,235,0.18)",
+                }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(37,99,235,0.15)"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(37,99,235,0.08)"; }}
+                data-testid={`quick-prompt-${prompt.slice(0, 20).replace(/\s+/g, "-").toLowerCase()}`}
+              >
+                {prompt}
+              </button>
+            ))}
+          </div>
+          {/* Fade hint — right edge */}
+          <div
+            className="pointer-events-none absolute right-0 top-0 bottom-0 w-10"
+            style={{ background: "linear-gradient(to right, transparent, var(--app-surface))" }}
+          />
         </div>
 
         {/* Input bar — sticky at bottom */}
