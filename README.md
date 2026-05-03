@@ -308,7 +308,7 @@ Unsafe water affects over 2 billion people globally. AquaSense makes continuous 
 
 **Ansil Muhammed N S**  
 First-year B.Tech CSE @ KMEA Engineering College, Kerala  
-GitHub: [@ClashLex](https://github.com/ClashLex) · Portfolio: [clashlex.github.io/FC1](https://clashlex.github.io/FC1)  
+GitHub: [@ClashLex](https://github.com/ClashLex)  
 Live App: [aqua-sense-builder--ansilmuhammed91.replit.app](https://aqua-sense-builder--ansilmuhammed91.replit.app/)
 
 ---
