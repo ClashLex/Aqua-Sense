@@ -404,7 +404,7 @@ export function Assistant() {
 
   return (
     <div
-      className="flex gap-5 overflow-hidden h-[520px] md:h-[calc(100dvh-9.5rem)]"
+      className="flex gap-5 overflow-hidden min-h-[50vh] h-[calc(100dvh-12rem)] md:h-[calc(100dvh-9.5rem)]"
       data-testid="assistant-page"
     >
       {/* ── Left: Chat column ─────────────────────────────────────────────── */}
@@ -454,31 +454,34 @@ export function Assistant() {
           style={{ scrollbarWidth: "thin", scrollbarColor: "var(--app-border) transparent" }}
           data-testid="chat-messages"
         >
-          {/* Empty state */}
-          {messages.length === 0 && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="flex flex-col items-center justify-center h-full text-center gap-4 pb-8"
-            >
+          {/* Empty state — collapses once first message sent */}
+          <AnimatePresence initial={false}>
+            {messages.length === 0 && (
               <motion.div
-                animate={{ scale: [1, 1.05, 1] }}
-                transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
-                className="w-14 h-14 rounded-full flex items-center justify-center"
-                style={{ background: "#e0e7ff", border: "1px solid #c7d2fe" }}
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.15 } }}
+                className="flex flex-col items-center text-center gap-3 pt-8 pb-4"
               >
-                <Bot className="w-7 h-7 text-[#2563eb]" />
+                <motion.div
+                  animate={{ scale: [1, 1.05, 1] }}
+                  transition={{ repeat: Infinity, duration: 3.5, ease: "easeInOut" }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center"
+                  style={{ background: "#e0e7ff", border: "1px solid #c7d2fe" }}
+                >
+                  <Bot className="w-6 h-6 text-[#2563eb]" />
+                </motion.div>
+                <div>
+                  <p className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>
+                    Ask me about your water quality
+                  </p>
+                  <p className="text-xs mt-0.5" style={{ color: "var(--app-text-3)" }}>
+                    I have live access to {chatSensor} sensor data
+                  </p>
+                </div>
               </motion.div>
-              <div>
-                <p className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>
-                  Ask me about your water quality
-                </p>
-                <p className="text-xs mt-1" style={{ color: "var(--app-text-3)" }}>
-                  I have live access to {chatSensor} sensor data
-                </p>
-              </div>
-            </motion.div>
-          )}
+            )}
+          </AnimatePresence>
 
           <AnimatePresence initial={false}>
             {messages.map((msg) => {
