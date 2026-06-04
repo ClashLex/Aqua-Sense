@@ -13,8 +13,28 @@ export interface StreamCallbacks {
   onError: (error: Error) => void;
 }
 
+export function getCustomApiKey(): string {
+  try {
+    return localStorage.getItem("aquasense-custom-api-key") || "";
+  } catch {
+    return "";
+  }
+}
+
+export function setCustomApiKey(key: string) {
+  try {
+    if (key) {
+      localStorage.setItem("aquasense-custom-api-key", key);
+    } else {
+      localStorage.removeItem("aquasense-custom-api-key");
+    }
+  } catch {
+    // ignore
+  }
+}
+
 export function isAIConfigured(): boolean {
-  return import.meta.env.PROD || API_KEY.length > 0;
+  return import.meta.env.PROD || API_KEY.length > 0 || getCustomApiKey().length > 0;
 }
 
 export function getAIModel(): string {
@@ -33,7 +53,9 @@ export async function streamChat(
   callbacks: StreamCallbacks,
   signal?: AbortSignal,
 ): Promise<void> {
-  const isDirect = API_KEY.length > 0;
+  const customKey = getCustomApiKey();
+  const activeKey = API_KEY || customKey;
+  const isDirect = activeKey.length > 0;
   const endpoint = isDirect ? `${API_BASE}/chat/completions` : "/api/chat";
 
   const headers: Record<string, string> = {
@@ -41,7 +63,7 @@ export async function streamChat(
   };
 
   if (isDirect) {
-    headers["Authorization"] = `Bearer ${API_KEY}`;
+    headers["Authorization"] = `Bearer ${activeKey}`;
   }
 
   const response = await fetch(endpoint, {

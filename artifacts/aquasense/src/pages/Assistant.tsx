@@ -11,6 +11,8 @@ import {
   getAIModel,
   getAIProvider,
   ChatMessage,
+  getCustomApiKey,
+  setCustomApiKey,
 } from "../lib/ai-client";
 
 interface Message {
@@ -72,6 +74,8 @@ export function Assistant() {
   const [messages, setMessages] = useState<Message[]>(loadHistory);
   const [input, setInput] = useState("");
   const [streaming, setStreaming] = useState(false);
+  const [showKeyConfig, setShowKeyConfig] = useState(false);
+  const [customKeyInput, setCustomKeyInput] = useState(getCustomApiKey);
   const abortRef = useRef<AbortController | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
@@ -155,8 +159,10 @@ export function Assistant() {
           );
           setStreaming(false);
           abortRef.current = null;
-        },
-      },
+          if (err.message.includes("API key") || err.message.includes("500")) {
+            setShowKeyConfig(true);
+          }
+        },      },
       abort.signal,
     );
   };
@@ -193,23 +199,85 @@ export function Assistant() {
             </p>
           </div>
         </div>
-        {messages.length > 0 && (
+        <div className="flex items-center gap-2">
           <button
-            onClick={clearChat}
+            onClick={() => setShowKeyConfig(!showKeyConfig)}
             className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-extrabold uppercase border-[3px] border-black dark:border-white transition-all hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:active:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] cursor-pointer"
             style={{
               borderColor: "var(--app-border)",
               color: "var(--app-text-1)",
-              background: "var(--app-surface)",
+              background: showKeyConfig ? "var(--app-primary-tint)" : "var(--app-surface)",
               boxShadow: "2px 2px 0px 0px var(--app-border)"
             }}
-            data-testid="clear-chat-btn"
+            data-testid="key-config-btn"
           >
-            <Trash2 className="w-3.5 h-3.5" />
-            Clear
+            🔑 {getCustomApiKey() ? "Key Set" : "API Key"}
           </button>
-        )}
+          {messages.length > 0 && (
+            <button
+              onClick={clearChat}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-extrabold uppercase border-[3px] border-black dark:border-white transition-all hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:active:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] cursor-pointer"
+              style={{
+                borderColor: "var(--app-border)",
+                color: "var(--app-text-1)",
+                background: "var(--app-surface)",
+                boxShadow: "2px 2px 0px 0px var(--app-border)"
+              }}
+              data-testid="clear-chat-btn"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Clear
+            </button>
+          )}
+        </div>
       </div>
+      {/* Key Config */}
+      {showKeyConfig && (
+        <div
+          className="rounded-md border-[3px] border-black dark:border-white px-4 py-4 mb-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+          style={{ background: "var(--app-surface)", borderColor: "var(--app-border)" }}
+        >
+          <p className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>
+            Configure Custom API Key (Stored locally)
+          </p>
+          <div className="flex gap-2">
+            <input
+              type="password"
+              placeholder="Paste OpenRouter API Key (sk-or-...)"
+              value={customKeyInput}
+              onChange={(e) => setCustomKeyInput(e.target.value)}
+              className="flex-1 bg-transparent text-[12px] px-3 py-2 rounded-md outline-none border-2 border-black dark:border-white font-semibold"
+              style={{ color: "var(--app-text-1)" }}
+            />
+            <button
+              onClick={() => {
+                setCustomApiKey(customKeyInput);
+                setShowKeyConfig(false);
+              }}
+              className="px-4 py-2 rounded-md text-[11px] font-extrabold uppercase border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+              style={{ background: "#2563eb", color: "#fff" }}
+            >
+              Save
+            </button>
+            {getCustomApiKey() && (
+              <button
+                onClick={() => {
+                  setCustomApiKey("");
+                  setCustomKeyInput("");
+                  setShowKeyConfig(false);
+                }}
+                className="px-4 py-2 rounded-md text-[11px] font-extrabold uppercase border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+                style={{ background: "#dc2626", color: "#fff" }}
+              >
+                Clear Key
+              </button>
+            )}
+          </div>
+          <p className="text-[10px] mt-2 font-bold" style={{ color: "var(--app-text-3)" }}>
+            Direct browser connections are made to the AI provider endpoint. Your key is only stored in your browser's LocalStorage.
+          </p>
+        </div>
+      )}
 
       {/* Not configured warning */}
       {!configured && (
@@ -232,9 +300,34 @@ export function Assistant() {
 VITE_AI_API_KEY=sk-or-v1-your-key
 VITE_AI_MODEL=deepseek/deepseek-v4-flash:free`}
           </pre>
-          <p className="text-[10px] mt-3 font-extrabold uppercase" style={{ color: "var(--app-text-3)" }}>
+          <p className="text-[10px] mt-3 font-extrabold uppercase mb-4" style={{ color: "var(--app-text-3)" }}>
             Free key at openrouter.ai — takes 2 minutes
           </p>
+          <div className="border-t border-black/10 dark:border-white/10 pt-4 max-w-md mx-auto">
+            <p className="text-xs font-bold mb-2" style={{ color: "var(--app-text-1)" }}>
+              Or configure it instantly in browser:
+            </p>
+            <div className="flex gap-2">
+              <input
+                type="password"
+                placeholder="Paste OpenRouter API Key"
+                value={customKeyInput}
+                onChange={(e) => setCustomKeyInput(e.target.value)}
+                className="flex-1 bg-transparent text-[12px] px-3 py-2 rounded-md outline-none border-2 border-black dark:border-white font-semibold"
+                style={{ color: "var(--app-text-1)" }}
+              />
+              <button
+                onClick={() => {
+                  setCustomApiKey(customKeyInput);
+                  window.location.reload();
+                }}
+                className="px-4 py-2 rounded-md text-[11px] font-extrabold uppercase border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] cursor-pointer"
+                style={{ background: "#2563eb", color: "#fff" }}
+              >
+                Save
+              </button>
+            </div>
+          </div>
         </div>
       )}
 
