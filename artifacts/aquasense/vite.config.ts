@@ -35,7 +35,7 @@ export default defineConfig(({ mode }) => {
                 try {
                   const body = JSON.parse(bodyStr);
                   const apiBase = env.VITE_AI_BASE_URL || "https://openrouter.ai/api/v1";
-                  const model = env.VITE_AI_MODEL || "deepseek/deepseek-v4-flash:free";
+                  const model = env.VITE_AI_MODEL || "google/gemini-2.5-flash:free";
 
                   const response = await fetch(`${apiBase}/chat/completions`, {
                     method: "POST",

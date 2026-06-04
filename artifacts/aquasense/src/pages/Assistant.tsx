@@ -298,7 +298,7 @@ export function Assistant() {
           >
 {`VITE_AI_BASE_URL=https://openrouter.ai/api/v1
 VITE_AI_API_KEY=sk-or-v1-your-key
-VITE_AI_MODEL=deepseek/deepseek-v4-flash:free`}
+VITE_AI_MODEL=google/gemini-2.5-flash:free`}
           </pre>
           <p className="text-[10px] mt-3 font-extrabold uppercase mb-4" style={{ color: "var(--app-text-3)" }}>
             Free key at openrouter.ai — takes 2 minutes

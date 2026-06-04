@@ -1,6 +1,6 @@
 const API_BASE = import.meta.env.VITE_AI_BASE_URL || "https://openrouter.ai/api/v1";
 const API_KEY = import.meta.env.VITE_AI_API_KEY || "";
-const MODEL = import.meta.env.VITE_AI_MODEL || "deepseek/deepseek-v4-flash:free";
+const MODEL = import.meta.env.VITE_AI_MODEL || "google/gemini-2.5-flash:free";
 
 export interface ChatMessage {
   role: "system" | "user" | "assistant";
