@@ -697,10 +697,9 @@ export function Analytics() {
 
         {/* Feed */}
         <div
-          className="divide-y overflow-y-auto"
+          className="divide-y divide-[var(--app-border-subtle)] overflow-y-auto"
           style={{
             maxHeight: 460,
-            divideColor: "var(--app-border-subtle)",
             scrollbarWidth: "thin",
             scrollbarColor: "var(--app-border) transparent",
           }}
