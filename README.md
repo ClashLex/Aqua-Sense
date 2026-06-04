@@ -1,7 +1,7 @@
 # AquaSense 2.0
 
-Smart Water Quality Monitoring Platform
-
+Smart Water Quality Monitoring Platform<br><br>
+v1 - https://github.com/ClashLex/Aqua-Sense
 ## Overview
 
 AquaSense is a real-time smart water quality monitoring platform that uses IoT sensor simulation, AI-powered anomaly detection, and predictive analytics to monitor, detect anomalies, and predict unsafe water conditions. Includes an AI chatbot powered by free Chinese model APIs (DeepSeek, Qwen).
