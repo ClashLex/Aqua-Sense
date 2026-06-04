@@ -19,12 +19,12 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
   return (
     <div className="flex gap-3">
       <div
-        className="w-6 h-6 rounded-full shrink-0 flex items-center justify-center text-xs font-bold mt-0.5"
-        style={{ background: "var(--app-primary-tint)", color: "#2563eb", border: "1px solid var(--app-primary-tint-border)" }}
+        className="w-6 h-6 rounded-md shrink-0 flex items-center justify-center text-xs font-black mt-0.5 border-2 border-black dark:border-white shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] bg-sky-200"
+        style={{ color: "#2563eb" }}
       >
         {n}
       </div>
-      <div className="flex-1 text-sm" style={{ color: "var(--app-text-1)" }}>{children}</div>
+      <div className="flex-1 text-sm font-bold leading-relaxed" style={{ color: "var(--app-text-1)" }}>{children}</div>
     </div>
   );
 }
@@ -32,10 +32,9 @@ function Step({ n, children }: { n: number; children: React.ReactNode }) {
 function Code({ children }: { children: string }) {
   return (
     <pre
-      className="rounded-xl p-4 overflow-x-auto text-[11px] leading-relaxed mt-2"
+      className="rounded-md p-4 overflow-x-auto text-[11px] leading-relaxed mt-2 border-[3px] border-black dark:border-white shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
       style={{
         background: "var(--app-surface-2)",
-        border: "1px solid var(--app-border)",
         color: "var(--app-text-1)",
         fontFamily: "var(--app-font-mono)",
       }}
@@ -47,19 +46,22 @@ function Code({ children }: { children: string }) {
 
 function InfoBox({ children, variant = "info" }: { children: React.ReactNode; variant?: "info" | "warning" | "tip" }) {
   const styles = {
-    info:    { bg: "var(--app-primary-tint)", border: "var(--app-primary-tint-border)", icon: <Info className="w-4 h-4 text-[#2563eb] shrink-0 mt-0.5" />, label: "Note" },
-    warning: { bg: "#fffbeb", border: "#fde68a", icon: <AlertTriangle className="w-4 h-4 text-[#d97706] shrink-0 mt-0.5" />, label: "Warning" },
-    tip:     { bg: "#f0fdf4", border: "#bbf7d0", icon: <CheckCircle2 className="w-4 h-4 text-[#16a34a] shrink-0 mt-0.5" />, label: "Tip" },
+    info:    { bg: "var(--app-primary-tint)", shadow: "#2563eb", icon: <Info className="w-4 h-4 text-[#2563eb] shrink-0 mt-0.5" />, label: "Note" },
+    warning: { bg: "#fef3c7", shadow: "#d97706", icon: <AlertTriangle className="w-4 h-4 text-[#d97706] shrink-0 mt-0.5" />, label: "Warning" },
+    tip:     { bg: "#dcfce7", shadow: "#16a34a", icon: <CheckCircle2 className="w-4 h-4 text-[#16a34a] shrink-0 mt-0.5" />, label: "Tip" },
   }[variant];
 
   return (
     <div
-      className="flex gap-3 rounded-xl p-4 text-sm"
-      style={{ background: styles.bg, border: `1px solid ${styles.border}` }}
+      className="flex gap-3 rounded-md p-4 text-sm border-[3px] border-black dark:border-white font-bold"
+      style={{
+        background: styles.bg,
+        boxShadow: `3px 3px 0px 0px ${styles.shadow}`
+      }}
     >
       {styles.icon}
       <div style={{ color: "var(--app-text-1)" }}>
-        <span className="font-semibold">{styles.label}: </span>
+        <span className="font-black uppercase tracking-wider mr-1 text-[11px] block sm:inline">{styles.label}:</span>
         {children}
       </div>
     </div>
@@ -69,18 +71,18 @@ function InfoBox({ children, variant = "info" }: { children: React.ReactNode; va
 function SensorRow({ name, pin, description }: { name: string; pin: string; description: string }) {
   return (
     <div
-      className="flex items-start gap-3 py-2.5 border-b last:border-b-0"
+      className="flex items-start gap-3 py-3 border-b-2 last:border-b-0 border-dashed"
       style={{ borderColor: "var(--app-border-subtle)" }}
     >
       <code
-        className="text-[10px] font-semibold px-2 py-1 rounded shrink-0 mt-0.5"
-        style={{ background: "var(--app-primary-tint)", color: "#2563eb", border: "1px solid var(--app-primary-tint-border)", fontFamily: "var(--app-font-mono)" }}
+        className="text-[10px] font-black px-2 py-1 rounded-md shrink-0 mt-0.5 border-2 border-black bg-sky-200 text-[#2563eb]"
+        style={{ fontFamily: "var(--app-font-mono)" }}
       >
         {pin}
       </code>
       <div>
-        <p className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>{name}</p>
-        <p className="text-xs mt-0.5" style={{ color: "var(--app-text-2)" }}>{description}</p>
+        <p className="text-sm font-black uppercase tracking-wide" style={{ color: "var(--app-text-1)" }}>{name}</p>
+        <p className="text-xs mt-0.5 font-bold" style={{ color: "var(--app-text-2)" }}>{description}</p>
       </div>
     </div>
   );
@@ -90,10 +92,10 @@ function OverviewTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-2" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+        <h2 className="text-base font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
           What is AquaSense 2.0?
         </h2>
-        <p className="text-sm leading-relaxed" style={{ color: "var(--app-text-2)" }}>
+        <p className="text-sm font-bold leading-relaxed" style={{ color: "var(--app-text-2)" }}>
           AquaSense 2.0 is a real-time water quality monitoring platform that connects physical
           IoT sensors to a live dashboard. It continuously collects data on five key water quality
           parameters — pH, turbidity, temperature, dissolved oxygen, and total dissolved solids —
@@ -102,28 +104,28 @@ function OverviewTab() {
       </div>
 
       <div
-        className="rounded-xl border p-4"
-        style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+        className="rounded-md border-[3px] border-black dark:border-white p-5 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+        style={{ background: "var(--app-surface)" }}
       >
-        <h3 className="text-sm font-semibold mb-4" style={{ color: "var(--app-text-1)" }}>How data flows</h3>
-        <div className="flex flex-wrap items-center gap-2 text-xs font-medium">
+        <h3 className="text-xs font-black uppercase tracking-wider mb-4" style={{ color: "var(--app-text-1)" }}>How data flows</h3>
+        <div className="flex flex-wrap items-center gap-3 text-xs font-bold">
           {["Physical Sensor", "Microcontroller\n(ESP32 / Arduino)", "Network\n(WiFi / MQTT)", "AquaSense API", "Live Dashboard"].map((s, i, arr) => (
             <div key={i} className="flex items-center gap-2">
               <div
-                className="px-3 py-2 rounded-lg text-center"
-                style={{ background: "var(--app-primary-tint)", color: "#2563eb", border: "1px solid var(--app-primary-tint-border)", minWidth: 100, whiteSpace: "pre-line", lineHeight: 1.3 }}
+                className="px-3 py-2 rounded-md text-center border-2 border-black dark:border-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)] bg-sky-200"
+                style={{ color: "#2563eb", minWidth: 110, whiteSpace: "pre-line", lineHeight: 1.3 }}
               >
                 {s}
               </div>
-              {i < arr.length - 1 && <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "var(--app-text-3)" }} />}
+              {i < arr.length - 1 && <ChevronRight className="w-4 h-4 shrink-0 text-black dark:text-white" />}
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--app-text-1)" }}>Monitored Parameters</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+        <h3 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: "var(--app-text-1)" }}>Monitored Parameters</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {[
             { metric: "pH", range: "6.5 – 8.5", unit: "pH", desc: "Acidity / alkalinity of water" },
             { metric: "Turbidity", range: "0 – 4 NTU", unit: "NTU", desc: "Cloudiness caused by particles" },
@@ -133,23 +135,23 @@ function OverviewTab() {
           ].map(({ metric, range, unit, desc }) => (
             <div
               key={metric}
-              className="rounded-xl border p-3"
-              style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+              className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
+              style={{ background: "var(--app-surface)" }}
             >
               <div className="flex items-center justify-between mb-1">
-                <span className="text-sm font-bold text-[#2563eb]">{metric}</span>
-                <span className="text-[10px] font-mono" style={{ color: "var(--app-text-3)", fontFamily: "var(--app-font-mono)" }}>{unit}</span>
+                <span className="text-sm font-black uppercase tracking-wide text-[#2563eb]">{metric}</span>
+                <span className="text-[10px] font-black font-mono border-2 border-black dark:border-white bg-[#faf9f5] dark:bg-[#27272a] px-1.5 py-0.5 rounded-md" style={{ color: "var(--app-text-3)", fontFamily: "var(--app-font-mono)" }}>{unit}</span>
               </div>
-              <p className="text-[11px] font-medium text-[#16a34a]">Safe: {range}</p>
-              <p className="text-[11px] mt-0.5" style={{ color: "var(--app-text-2)" }}>{desc}</p>
+              <p className="text-[11px] font-black uppercase tracking-wider text-[#16a34a]">Safe: {range}</p>
+              <p className="text-[11px] mt-1 font-bold" style={{ color: "var(--app-text-2)" }}>{desc}</p>
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--app-text-1)" }}>Quick Start Checklist</h3>
-        <div className="space-y-2">
+        <h3 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: "var(--app-text-1)" }}>Quick Start Checklist</h3>
+        <div className="space-y-3">
           {[
             "Purchase or source the required sensors (see Hardware tab)",
             "Wire sensors to your ESP32 or Arduino microcontroller",
@@ -160,7 +162,7 @@ function OverviewTab() {
           ].map((item, i) => (
             <div key={i} className="flex items-start gap-2.5">
               <CheckCircle2 className="w-4 h-4 text-[#16a34a] shrink-0 mt-0.5" />
-              <span className="text-sm" style={{ color: "var(--app-text-2)" }}>{item}</span>
+              <span className="text-sm font-bold" style={{ color: "var(--app-text-2)" }}>{item}</span>
             </div>
           ))}
         </div>
@@ -173,51 +175,55 @@ function HardwareTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+        <h2 className="text-base font-black uppercase tracking-wider mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
           Required Hardware
         </h2>
-        <p className="text-sm" style={{ color: "var(--app-text-2)" }}>
+        <p className="text-sm font-bold" style={{ color: "var(--app-text-2)" }}>
           AquaSense works with any ESP32 or Arduino-compatible board capable of WiFi or serial communication.
         </p>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--app-text-1)" }}>Recommended Microcontrollers</h3>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <h3 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: "var(--app-text-1)" }}>Recommended Microcontrollers</h3>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           {[
-            { name: "ESP32 DevKit", note: "Recommended — built-in WiFi & Bluetooth", badge: "Best" },
-            { name: "Arduino Mega 2560", note: "Use with ESP8266 WiFi module for connectivity", badge: "" },
-            { name: "Raspberry Pi (any)", note: "Python script, full Linux environment", badge: "Advanced" },
-          ].map(({ name, note, badge }) => (
+            { name: "ESP32 DevKit", note: "Recommended — built-in WiFi & Bluetooth", badge: "Best", color: "#2563eb", badgeColor: "#eff6ff", badgeText: "#2563eb" },
+            { name: "Arduino Mega 2560", note: "Use with ESP8266 WiFi module for connectivity", badge: "Legacy", color: "#d97706", badgeColor: "#fffbeb", badgeText: "#d97706" },
+            { name: "Raspberry Pi (any)", note: "Python script, full Linux environment", badge: "Advanced", color: "#7c3aed", badgeColor: "#f5f3ff", badgeText: "#7c3aed" },
+          ].map(({ name, note, badge, color, badgeColor, badgeText }) => (
             <div
               key={name}
-              className="rounded-xl border p-4"
-              style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+              className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
+              style={{ background: "var(--app-surface)" }}
             >
-              <div className="flex items-center gap-2 mb-1">
+              <div className="flex items-center gap-2 mb-2 flex-wrap">
                 <Cpu className="w-4 h-4 text-[#2563eb]" />
-                <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>{name}</span>
+                <span className="text-sm font-black uppercase tracking-wide" style={{ color: "var(--app-text-1)" }}>{name}</span>
                 {badge && (
-                  <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#f0fdf4] text-[#16a34a] border border-[#bbf7d0]">{badge}</span>
+                  <span
+                    className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border-2 border-black dark:border-white"
+                    style={{ background: badgeColor, color: badgeText }}
+                  >
+                    {badge}
+                  </span>
                 )}
               </div>
-              <p className="text-xs" style={{ color: "var(--app-text-2)" }}>{note}</p>
+              <p className="text-xs font-bold" style={{ color: "var(--app-text-2)" }}>{note}</p>
             </div>
           ))}
         </div>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--app-text-1)" }}>Sensor Bill of Materials</h3>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: "var(--app-text-1)" }}>Sensor Bill of Materials</h3>
         <div
-          className="rounded-xl border overflow-hidden"
-          style={{ borderColor: "var(--app-border)" }}
+          className="rounded-md border-[3px] border-black dark:border-white overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
         >
           <table className="w-full text-xs">
             <thead>
-              <tr style={{ background: "var(--app-surface-2)", borderBottom: "1px solid var(--app-border)" }}>
+              <tr style={{ background: "var(--app-surface-2)", borderBottom: "3px solid var(--app-border)" }}>
                 {["Parameter", "Sensor Module", "Protocol", "Est. Cost"].map((h) => (
-                  <th key={h} className="px-4 py-2.5 text-left font-semibold tracking-wide" style={{ color: "var(--app-text-3)", fontFamily: "var(--app-font-mono)" }}>{h}</th>
+                  <th key={h} className="px-4 py-3 text-left font-black uppercase tracking-wide border-r-2 border-black last:border-r-0" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-mono)" }}>{h}</th>
                 ))}
               </tr>
             </thead>
@@ -229,11 +235,11 @@ function HardwareTab() {
                 ["Dissolved O₂", "Atlas Scientific EZO-DO Circuit", "UART / I²C", "$150–200"],
                 ["TDS", "DFRobot Gravity TDS Sensor (SEN0244)", "Analog", "$15–25"],
               ].map(([param, sensor, proto, cost]) => (
-                <tr key={param} style={{ borderBottom: "1px solid var(--app-border-subtle)" }}>
-                  <td className="px-4 py-2.5 font-semibold text-[#2563eb]">{param}</td>
-                  <td className="px-4 py-2.5" style={{ color: "var(--app-text-1)" }}>{sensor}</td>
-                  <td className="px-4 py-2.5 font-mono" style={{ color: "var(--app-text-2)", fontFamily: "var(--app-font-mono)" }}>{proto}</td>
-                  <td className="px-4 py-2.5 text-[#16a34a] font-semibold">{cost}</td>
+                <tr key={param} className="border-b-2 border-black last:border-b-0">
+                  <td className="px-4 py-3 font-black uppercase text-[#2563eb] border-r-2 border-black">{param}</td>
+                  <td className="px-4 py-3 font-bold border-r-2 border-black" style={{ color: "var(--app-text-1)" }}>{sensor}</td>
+                  <td className="px-4 py-3 font-mono font-bold border-r-2 border-black" style={{ color: "var(--app-text-2)", fontFamily: "var(--app-font-mono)" }}>{proto}</td>
+                  <td className="px-4 py-3 text-[#16a34a] font-black">{cost}</td>
                 </tr>
               ))}
             </tbody>
@@ -242,10 +248,10 @@ function HardwareTab() {
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-3" style={{ color: "var(--app-text-1)" }}>ESP32 Pin Connections</h3>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-3" style={{ color: "var(--app-text-1)" }}>ESP32 Pin Connections</h3>
         <div
-          className="rounded-xl border p-4"
-          style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+          className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+          style={{ background: "var(--app-surface)" }}
         >
           <SensorRow name="pH Sensor (DFRobot SEN0169-V2)" pin="GPIO34" description="Analog input — connect SIGNAL → GPIO34, VCC → 3.3V, GND → GND" />
           <SensorRow name="Turbidity Sensor (SEN0189)" pin="GPIO35" description="Analog input — connect SIGNAL → GPIO35, VCC → 5V, GND → GND" />
@@ -270,10 +276,10 @@ function NetworkTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+        <h2 className="text-base font-black uppercase tracking-wider mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
           Network Configuration
         </h2>
-        <p className="text-sm" style={{ color: "var(--app-text-2)" }}>
+        <p className="text-sm font-bold" style={{ color: "var(--app-text-2)" }}>
           AquaSense supports two connectivity modes: direct HTTP POST to the REST API, or MQTT pub/sub for lower-latency streaming.
         </p>
       </div>
@@ -285,21 +291,21 @@ function NetworkTab() {
         ].map(({ title, desc, badge }) => (
           <div
             key={title}
-            className="rounded-xl border p-4"
-            style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+            className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
+            style={{ background: "var(--app-surface)" }}
           >
-            <div className="flex items-center gap-2 mb-2">
+            <div className="flex items-center gap-2 mb-2 flex-wrap">
               <Wifi className="w-4 h-4 text-[#2563eb]" />
-              <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>{title}</span>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-[#eff6ff] text-[#2563eb] border border-[#bfdbfe]">{badge}</span>
+              <span className="text-sm font-black uppercase tracking-wide" style={{ color: "var(--app-text-1)" }}>{title}</span>
+              <span className="text-[9px] font-black uppercase px-1.5 py-0.5 rounded-md border-2 border-black dark:border-white bg-[#eff6ff] text-[#2563eb]">{badge}</span>
             </div>
-            <p className="text-xs" style={{ color: "var(--app-text-2)" }}>{desc}</p>
+            <p className="text-xs font-bold" style={{ color: "var(--app-text-2)" }}>{desc}</p>
           </div>
         ))}
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--app-text-1)" }}>Option 1 — HTTP REST (ESP32 / Arduino)</h3>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Option 1 — HTTP REST (ESP32 / Arduino)</h3>
         <div className="space-y-3">
           <Step n={1}>
             Add your WiFi credentials and server URL to the firmware config section:
@@ -342,15 +348,15 @@ void postReading(float ph, float turb, float temp,
 }`}</Code>
           </Step>
           <Step n={3}>
-            In your <code className="text-[#2563eb] bg-[var(--app-primary-tint)] px-1 rounded" style={{ fontFamily: "var(--app-font-mono)" }}>loop()</code>, call{" "}
-            <code className="text-[#2563eb] bg-[var(--app-primary-tint)] px-1 rounded" style={{ fontFamily: "var(--app-font-mono)" }}>postReading()</code> every{" "}
-            <code className="text-[#2563eb] bg-[var(--app-primary-tint)] px-1 rounded" style={{ fontFamily: "var(--app-font-mono)" }}>POST_INTERVAL</code> milliseconds.
+            In your <code className="text-[#2563eb] bg-[var(--app-primary-tint)] px-1.5 py-0.5 rounded-md border-2 border-black dark:border-white font-mono font-bold" style={{ fontFamily: "var(--app-font-mono)" }}>loop()</code>, call{" "}
+            <code className="text-[#2563eb] bg-[var(--app-primary-tint)] px-1.5 py-0.5 rounded-md border-2 border-black dark:border-white font-mono font-bold" style={{ fontFamily: "var(--app-font-mono)" }}>postReading()</code> every{" "}
+            <code className="text-[#2563eb] bg-[var(--app-primary-tint)] px-1.5 py-0.5 rounded-md border-2 border-black dark:border-white font-mono font-bold" style={{ fontFamily: "var(--app-font-mono)" }}>POST_INTERVAL</code> milliseconds.
           </Step>
         </div>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--app-text-1)" }}>Option 2 — MQTT (Mosquitto / HiveMQ)</h3>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Option 2 — MQTT (Mosquitto / HiveMQ)</h3>
         <Code>{`// Install PubSubClient library
 #include <PubSubClient.h>
 
@@ -373,7 +379,7 @@ void publishReading(float ph, float turb, float temp,
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--app-text-1)" }}>Python (Raspberry Pi)</h3>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Python (Raspberry Pi)</h3>
         <Code>{`import requests, json, time
 
 API_URL = "https://your-aquasense-domain.replit.app/api/readings"
@@ -414,10 +420,10 @@ function CalibrationTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+        <h2 className="text-base font-black uppercase tracking-wider mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
           Sensor Calibration
         </h2>
-        <p className="text-sm" style={{ color: "var(--app-text-2)" }}>
+        <p className="text-sm font-bold" style={{ color: "var(--app-text-2)" }}>
           Calibrate your sensors before first use and recalibrate every 1–3 months for accurate readings.
         </p>
       </div>
@@ -489,20 +495,19 @@ function CalibrationTab() {
       ].map(({ metric, color, interval, steps, note }) => (
         <div
           key={metric}
-          className="rounded-xl border overflow-hidden"
-          style={{ borderColor: "var(--app-border)" }}
+          className="rounded-md border-[3px] border-black dark:border-white overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
         >
           <div
-            className="px-4 py-3 flex items-center justify-between"
-            style={{ background: "var(--app-surface-2)", borderBottom: "1px solid var(--app-border)" }}
+            className="px-4 py-3 flex items-center justify-between border-b-[3px] border-black dark:border-white"
+            style={{ background: "var(--app-surface-2)" }}
           >
             <div className="flex items-center gap-2">
               <SlidersHorizontal className="w-4 h-4" style={{ color }} />
-              <span className="text-sm font-bold" style={{ color }}>{metric} Calibration</span>
+              <span className="text-sm font-black uppercase tracking-wider" style={{ color }}>{metric} Calibration</span>
             </div>
             <span
-              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-              style={{ background: `${color}14`, color, border: `1px solid ${color}30` }}
+              className="text-[10px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md border-2 border-black dark:border-white"
+              style={{ background: `${color}14`, color }}
             >
               {interval}
             </span>
@@ -521,25 +526,25 @@ function ApiTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+        <h2 className="text-base font-black uppercase tracking-wider mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
           API Reference
         </h2>
-        <p className="text-sm" style={{ color: "var(--app-text-2)" }}>
+        <p className="text-sm font-bold" style={{ color: "var(--app-text-2)" }}>
           The AquaSense REST API accepts sensor readings as JSON payloads over HTTPS.
         </p>
       </div>
 
       <div
-        className="rounded-xl border p-4"
-        style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+        className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+        style={{ background: "var(--app-surface)" }}
       >
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-xs font-bold px-2 py-1 rounded bg-[#16a34a] text-white">POST</span>
-          <code className="text-sm font-semibold" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-mono)" }}>/api/readings</code>
+          <span className="text-xs font-black uppercase px-2 py-1 rounded-md border-2 border-black bg-[#16a34a] text-white">POST</span>
+          <code className="text-sm font-black font-mono" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-mono)" }}>/api/readings</code>
         </div>
-        <p className="text-xs mb-3" style={{ color: "var(--app-text-2)" }}>Submit a new sensor reading. The server validates ranges and triggers anomaly detection.</p>
+        <p className="text-xs font-bold mb-3" style={{ color: "var(--app-text-2)" }}>Submit a new sensor reading. The server validates ranges and triggers anomaly detection.</p>
 
-        <h4 className="text-xs font-semibold mb-2" style={{ color: "var(--app-text-1)" }}>Request Body (JSON)</h4>
+        <h4 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Request Body (JSON)</h4>
         <Code>{`{
   "sensor":      "River Station A",   // string — sensor identifier
   "pH":          7.25,                // number — 0–14
@@ -550,7 +555,7 @@ function ApiTab() {
   "timestamp":   1714500000000       // optional — Unix ms (defaults to server time)
 }`}</Code>
 
-        <h4 className="text-xs font-semibold mt-4 mb-2" style={{ color: "var(--app-text-1)" }}>Response</h4>
+        <h4 className="text-xs font-black uppercase tracking-wider mt-4 mb-2" style={{ color: "var(--app-text-1)" }}>Response</h4>
         <Code>{`// 201 Created
 {
   "id": 42,
@@ -567,24 +572,24 @@ function ApiTab() {
       </div>
 
       <div
-        className="rounded-xl border p-4"
-        style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+        className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+        style={{ background: "var(--app-surface)" }}
       >
         <div className="flex items-center gap-3 mb-3">
-          <span className="text-xs font-bold px-2 py-1 rounded bg-[#2563eb] text-white">GET</span>
-          <code className="text-sm font-semibold" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-mono)" }}>/api/readings?sensor=River+Station+A&limit=100</code>
+          <span className="text-xs font-black uppercase px-2 py-1 rounded-md border-2 border-black bg-[#2563eb] text-white">GET</span>
+          <code className="text-sm font-black font-mono" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-mono)" }}>/api/readings?sensor=River+Station+A&limit=100</code>
         </div>
-        <p className="text-xs" style={{ color: "var(--app-text-2)" }}>Fetch recent readings for a sensor. Returns an array sorted by timestamp descending.</p>
+        <p className="text-xs font-bold" style={{ color: "var(--app-text-2)" }}>Fetch recent readings for a sensor. Returns an array sorted by timestamp descending.</p>
       </div>
 
       <div>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--app-text-1)" }}>Valid Sensor Names</h3>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Valid Sensor Names</h3>
         <div className="flex flex-wrap gap-2">
           {["River Station A", "Treatment Plant B", "Distribution Point C"].map((s) => (
             <code
               key={s}
-              className="text-xs px-3 py-1 rounded-full"
-              style={{ background: "var(--app-primary-tint)", color: "#2563eb", border: "1px solid var(--app-primary-tint-border)", fontFamily: "var(--app-font-mono)" }}
+              className="text-xs px-3 py-1 rounded-md border-2 border-black dark:border-white font-mono font-bold bg-[#dbeafe] text-[#2563eb]"
+              style={{ fontFamily: "var(--app-font-mono)" }}
             >
               {s}
             </code>
@@ -597,7 +602,7 @@ function ApiTab() {
       </InfoBox>
 
       <div>
-        <h3 className="text-sm font-semibold mb-2" style={{ color: "var(--app-text-1)" }}>Test with cURL</h3>
+        <h3 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Test with cURL</h3>
         <Code>{`curl -X POST https://your-app.replit.app/api/readings \\
   -H "Content-Type: application/json" \\
   -d '{
@@ -660,35 +665,34 @@ function TroubleshootingTab() {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-lg font-bold mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+        <h2 className="text-base font-black uppercase tracking-wider mb-1" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
           Troubleshooting Guide
         </h2>
-        <p className="text-sm" style={{ color: "var(--app-text-2)" }}>
+        <p className="text-sm font-bold" style={{ color: "var(--app-text-2)" }}>
           Common issues and their solutions for setting up and operating AquaSense sensors.
         </p>
       </div>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         {issues.map(({ problem, cause, fix }) => (
           <div
             key={problem}
-            className="rounded-xl border overflow-hidden"
-            style={{ borderColor: "var(--app-border)" }}
+            className="rounded-md border-[3px] border-black dark:border-white overflow-hidden shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)]"
           >
             <div
-              className="px-4 py-3 flex items-start gap-3"
-              style={{ background: "var(--app-surface-2)", borderBottom: "1px solid var(--app-border)" }}
+              className="px-4 py-3 flex items-start gap-3 border-b-[3px] border-black dark:border-white"
+              style={{ background: "var(--app-surface-2)" }}
             >
               <AlertTriangle className="w-4 h-4 text-[#d97706] shrink-0 mt-0.5" />
-              <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>{problem}</span>
+              <span className="text-sm font-black uppercase tracking-wide" style={{ color: "var(--app-text-1)" }}>{problem}</span>
             </div>
-            <div className="px-4 py-3 space-y-2" style={{ background: "var(--app-surface)" }}>
+            <div className="px-4 py-3 space-y-2 font-bold" style={{ background: "var(--app-surface)" }}>
               <p className="text-xs" style={{ color: "var(--app-text-2)" }}>
-                <span className="font-semibold" style={{ color: "var(--app-text-1)" }}>Cause: </span>
+                <span className="font-black uppercase tracking-wider text-[10px] text-[#dc2626]">Cause: </span>
                 {cause}
               </p>
               <p className="text-xs" style={{ color: "var(--app-text-2)" }}>
-                <span className="font-semibold text-[#16a34a]">Fix: </span>
+                <span className="font-black uppercase tracking-wider text-[10px] text-[#16a34a]">Fix: </span>
                 {fix}
               </p>
             </div>
@@ -697,14 +701,14 @@ function TroubleshootingTab() {
       </div>
 
       <div
-        className="rounded-xl border p-4"
-        style={{ borderColor: "var(--app-border)", background: "var(--app-surface)" }}
+        className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+        style={{ background: "var(--app-surface)" }}
       >
         <div className="flex items-center gap-2 mb-3">
           <Terminal className="w-4 h-4 text-[#2563eb]" />
-          <span className="text-sm font-semibold" style={{ color: "var(--app-text-1)" }}>Debug Checklist</span>
+          <span className="text-sm font-black uppercase tracking-wide" style={{ color: "var(--app-text-1)" }}>Debug Checklist</span>
         </div>
-        <div className="space-y-1.5">
+        <div className="space-y-2">
           {[
             "Open Serial Monitor (115200 baud) to see live sensor output",
             "Confirm WiFi connects and IP is assigned",
@@ -715,7 +719,7 @@ function TroubleshootingTab() {
           ].map((item, i) => (
             <div key={i} className="flex items-start gap-2">
               <Zap className="w-3.5 h-3.5 text-[#d97706] shrink-0 mt-0.5" />
-              <span className="text-xs" style={{ color: "var(--app-text-2)" }}>{item}</span>
+              <span className="text-xs font-bold" style={{ color: "var(--app-text-2)" }}>{item}</span>
             </div>
           ))}
         </div>
@@ -737,23 +741,22 @@ export function Guide() {
   const [activeTab, setActiveTab] = useState<TabId>("overview");
 
   return (
-    <div className="space-y-4" data-testid="guide-page">
+    <div className="space-y-6" data-testid="guide-page">
       {/* Page header */}
       <div className="flex items-center gap-3">
         <div
-          className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-          style={{ background: "var(--app-primary-tint)", border: "1px solid var(--app-primary-tint-border)" }}
+          className="w-9 h-9 rounded-md flex items-center justify-center shrink-0 border-[3px] border-black dark:border-white bg-[#2563eb] text-white shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,1)]"
         >
-          <BookOpen className="w-5 h-5 text-[#2563eb]" />
+          <BookOpen className="w-5 h-5" />
         </div>
         <div>
           <h1
-            className="text-lg font-bold leading-none"
+            className="text-lg font-black leading-none uppercase tracking-wider"
             style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}
           >
             Setup Guide
           </h1>
-          <p className="text-xs mt-0.5" style={{ color: "var(--app-text-2)" }}>
+          <p className="text-xs mt-1 font-bold" style={{ color: "var(--app-text-2)" }}>
             Connect your water quality sensors to a local source
           </p>
         </div>
@@ -761,25 +764,23 @@ export function Guide() {
 
       {/* Tab bar — horizontal scroll on mobile */}
       <div
-        className="flex gap-1 overflow-x-auto pb-0.5"
-        style={{ borderBottom: "1px solid var(--app-border)", scrollbarWidth: "none" }}
+        className="flex gap-2 overflow-x-auto pb-2"
+        style={{ borderBottom: "3px solid var(--app-border)", scrollbarWidth: "none" }}
       >
         {TABS.map(({ id, label, icon: Icon }) => (
           <button
             key={id}
             onClick={() => setActiveTab(id)}
-            className="flex items-center gap-1.5 whitespace-nowrap pb-3 px-3 text-sm font-medium transition-colors relative shrink-0"
-            style={{ color: activeTab === id ? "#2563eb" : "var(--app-text-2)" }}
+            className="flex items-center gap-1.5 whitespace-nowrap py-1.5 px-3 text-xs font-extrabold uppercase border-[3px] border-black dark:border-white rounded-md transition-all hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] dark:hover:shadow-[3px_3px_0px_0px_rgba(255,255,255,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)] dark:active:shadow-[1px_1px_0px_0px_rgba(255,255,255,1)] shrink-0 cursor-pointer"
+            style={{
+              background: activeTab === id ? "#2563eb" : "var(--app-surface-2)",
+              color: activeTab === id ? "#ffffff" : "var(--app-text-1)",
+              boxShadow: activeTab === id ? "3px 3px 0px 0px var(--app-border)" : "1px 1px 0px 0px var(--app-border)",
+            }}
             data-testid={`guide-tab-${id}`}
           >
             <Icon className="w-3.5 h-3.5" />
             {label}
-            {activeTab === id && (
-              <motion.div
-                layoutId="guide-tab-indicator"
-                className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#2563eb] rounded-full"
-              />
-            )}
           </button>
         ))}
       </div>

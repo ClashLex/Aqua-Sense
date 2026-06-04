@@ -37,9 +37,10 @@ function useSmoothedScore(target: number, duration = 700) {
     const step = (now: number) => {
       const p = Math.min((now - t0) / duration, 1);
       const eased = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
-      setDisplay(Math.round(start + diff * eased));
+      const currentVal = Math.round(start + diff * eased);
+      setDisplay(currentVal);
+      from.current = currentVal;
       if (p < 1) raf = requestAnimationFrame(step);
-      else from.current = target;
     };
     raf = requestAnimationFrame(step);
     return () => cancelAnimationFrame(raf);
@@ -72,18 +73,16 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
 
   return (
     <div
-      className="rounded-xl border flex flex-col items-center p-3 shrink-0"
+      className="rounded-md border-[3px] border-black dark:border-white flex flex-col items-center p-3 shrink-0 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
       style={{
         background: "var(--app-surface)",
-        borderColor: "var(--app-border)",
-        boxShadow: "0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04)",
         width: 168,
       }}
       data-testid="water-quality-gauge"
     >
       <span
-        className="text-[10px] font-medium tracking-wide uppercase mb-1"
-        style={{ color: "var(--app-text-3)" }}
+        className="text-[11px] font-extrabold tracking-wide uppercase mb-1"
+        style={{ color: "var(--app-text-1)" }}
       >
         Water Quality
       </span>
@@ -118,7 +117,7 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           fill={offline ? "#94a3b8" : scoreColor(displayed)}
           fontSize="32"
           fontFamily="DM Mono, monospace"
-          fontWeight="500"
+          fontWeight="700"
           style={{ transition: "fill 0.6s ease" }}
         >
           {displayed}
@@ -142,9 +141,9 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
           y={CY + 42}
           textAnchor="middle"
           fill={offline ? "#94a3b8" : scoreColor(displayed)}
-          fontSize="9"
-          fontFamily="Plus Jakarta Sans, sans-serif"
-          fontWeight="700"
+          fontSize="10"
+          fontFamily="Space Grotesk, sans-serif"
+          fontWeight="800"
           letterSpacing="0.5"
           style={{ transition: "fill 0.6s ease" }}
         >
@@ -160,8 +159,8 @@ export function WaterQualityGauge({ score, sensorName, offline = false }: WaterQ
       </svg>
 
       <span
-        className="text-[9px] font-medium tracking-wide text-center leading-tight mt-0.5 px-1 truncate w-full"
-        style={{ color: "var(--app-text-3)" }}
+        className="text-[10px] font-extrabold tracking-wide text-center leading-tight mt-0.5 px-1 truncate w-full uppercase"
+        style={{ color: "var(--app-text-2)" }}
       >
         {sensorName}
       </span>

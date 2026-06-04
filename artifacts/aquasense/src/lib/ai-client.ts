@@ -14,7 +14,7 @@ export interface StreamCallbacks {
 }
 
 export function isAIConfigured(): boolean {
-  return API_KEY.length > 0;
+  return import.meta.env.PROD || API_KEY.length > 0;
 }
 
 export function getAIModel(): string {
@@ -33,17 +33,20 @@ export async function streamChat(
   callbacks: StreamCallbacks,
   signal?: AbortSignal,
 ): Promise<void> {
-  if (!API_KEY) {
-    callbacks.onError(new Error("AI API key not configured. Set VITE_AI_API_KEY in your .env file."));
-    return;
+  const isDirect = API_KEY.length > 0;
+  const endpoint = isDirect ? `${API_BASE}/chat/completions` : "/api/chat";
+
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+  };
+
+  if (isDirect) {
+    headers["Authorization"] = `Bearer ${API_KEY}`;
   }
 
-  const response = await fetch(`${API_BASE}/chat/completions`, {
+  const response = await fetch(endpoint, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${API_KEY}`,
-    },
+    headers,
     body: JSON.stringify({
       model: MODEL,
       messages,

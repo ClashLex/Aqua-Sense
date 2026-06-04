@@ -25,29 +25,27 @@ export function AnomalyBanner({ anomalies, onDismiss }: AnomalyBannerProps) {
               scaleY:  { duration: 0.25 },
               x:       { duration: 0.45, delay: 0.25 },
             }}
-            className="relative overflow-hidden rounded-xl px-4 py-3 border flex items-center gap-3"
+            className="relative overflow-hidden rounded-md px-4 py-3 border-[3px] border-black dark:border-white flex items-center gap-3 shadow-[3px_3px_0px_0px_#dc2626]"
             style={{
-              background:   "rgba(220, 38, 38, 0.08)",
-              borderColor:  "rgba(220, 38, 38, 0.30)",
+              background:   "var(--app-surface)",
             }}
             data-testid={`anomaly-banner-${anomaly.id}`}
           >
             <AlertTriangle className="w-5 h-5 text-[#dc2626] shrink-0" />
 
             <div className="flex-1 min-w-0">
-              <span className="text-[#dc2626] text-xs font-semibold">Anomaly detected</span>
-              <span className="text-xs ml-2" style={{ color: "var(--app-text-2)" }}>
+              <span className="text-[#dc2626] text-xs font-extrabold uppercase tracking-wide">Anomaly detected</span>
+              <span className="text-xs ml-2 font-bold" style={{ color: "var(--app-text-1)" }}>
                 {anomaly.threshold} at {anomaly.sensor}
               </span>
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
               <span
-                className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                className="text-[10px] font-extrabold px-2 py-0.5 rounded-md border-2 border-black dark:border-white"
                 style={{
-                  color:      "#dc2626",
-                  background: "rgba(220, 38, 38, 0.14)",
-                  border:     "1px solid rgba(220, 38, 38, 0.30)",
+                  color:      "#b91c1c",
+                  background: "#fee2e2",
                 }}
               >
                 {anomaly.severity}

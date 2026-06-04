@@ -38,9 +38,9 @@ const STATUS_BAR: Record<StatusType, string> = {
 };
 
 const STATUS_PILL: Record<StatusType, { bg: string; text: string; border: string }> = {
-  SAFE:    { bg: "rgba(22, 163, 74, 0.10)",  text: "#16a34a", border: "rgba(22, 163, 74, 0.25)" },
-  WARNING: { bg: "rgba(217, 119, 6, 0.10)",  text: "#d97706", border: "rgba(217, 119, 6, 0.25)" },
-  DANGER:  { bg: "rgba(220, 38, 38, 0.10)",  text: "#dc2626", border: "rgba(220, 38, 38, 0.25)" },
+  SAFE:    { bg: "#dcfce7", text: "#15803d", border: "var(--app-border)" },
+  WARNING: { bg: "#ffedd5", text: "#c2410c", border: "var(--app-border)" },
+  DANGER:  { bg: "#fee2e2", text: "#b91c1c", border: "var(--app-border)" },
 };
 
 function useCountUp(target: number, duration = 500) {
@@ -78,6 +78,10 @@ export function MetricCard({
   const pill       = STATUS_PILL[status];
   const isDanger   = !offline && status === "DANGER";
 
+  const cardShadow = offline
+    ? "4px 4px 0px 0px var(--app-border)"
+    : `4px 4px 0px 0px ${STATUS_BAR[status]}`;
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 18 }}
@@ -86,9 +90,9 @@ export function MetricCard({
       className={`metric-card relative flex flex-col overflow-hidden${isDanger ? " animate-pulse-danger" : ""}`}
       style={{
         background:    "var(--app-surface)",
-        border:        "1px solid var(--app-border)",
-        borderRadius:  8,
-        boxShadow:     "0 1px 3px rgba(0,0,0,0.08)",
+        border:        "3px solid var(--app-border)",
+        borderRadius:  6,
+        boxShadow:     cardShadow,
         opacity:       offline ? 0.72 : 1,
         paddingBottom: 3,          /* reserve space for the 3-px bar */
       }}
@@ -98,10 +102,10 @@ export function MetricCard({
       {/* ── Top: icon + label ────────────────────────────────── */}
       <div className="flex items-center gap-2.5 px-4 pt-4 pb-0">
         <div
-          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+          className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0 border-2"
           style={{
-            background: offline ? "var(--app-surface-2)" : `${iconColor}14`,
-            border:     `1px solid ${offline ? "var(--app-border)" : `${iconColor}28`}`,
+            background: offline ? "var(--app-surface-2)" : `${iconColor}22`,
+            borderColor: "var(--app-border)",
           }}
         >
           {offline
@@ -110,8 +114,8 @@ export function MetricCard({
           }
         </div>
         <span
-          className="text-[10px] font-semibold tracking-widest"
-          style={{ color: "var(--app-text-2)", textTransform: "uppercase" }}
+          className="text-[11px] font-extrabold tracking-wider"
+          style={{ color: "var(--app-text-1)", textTransform: "uppercase" }}
         >
           {label}
         </span>
@@ -124,7 +128,7 @@ export function MetricCard({
           style={{
             fontSize:      48,
             fontFamily:    "DM Mono, monospace",
-            fontWeight:    500,
+            fontWeight:    700,
             color:         offline ? "var(--app-text-3)" : "var(--app-text-1)",
             letterSpacing: "-0.02em",
           }}
@@ -134,7 +138,7 @@ export function MetricCard({
         </span>
         {!offline && unit && (
           <span
-            className="mb-1.5 text-sm"
+            className="mb-1.5 text-sm font-bold"
             style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}
           >
             {unit.trim()}
@@ -146,11 +150,11 @@ export function MetricCard({
       <div className="px-4 pb-3.5">
         {offline ? (
           <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-extrabold border-2"
             style={{
               color:      "var(--app-text-3)",
               background: "var(--app-surface-2)",
-              border:     "1px solid var(--app-border)",
+              borderColor: "var(--app-border)",
             }}
             data-testid={`status-${metric.toLowerCase()}`}
           >
@@ -159,11 +163,11 @@ export function MetricCard({
           </span>
         ) : (
           <span
-            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold"
+            className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-extrabold border-2"
             style={{
               color:      pill.text,
               background: pill.bg,
-              border:     `1px solid ${pill.border}`,
+              borderColor: pill.border,
             }}
             data-testid={`status-${metric.toLowerCase()}`}
           >
@@ -186,9 +190,8 @@ export function MetricCard({
           bottom:       0,
           left:         0,
           right:        0,
-          height:       3,
+          height:       4,
           background:   barColor,
-          borderRadius: "0 0 8px 8px",
           transition:   "background 0.5s ease",
         }}
       />

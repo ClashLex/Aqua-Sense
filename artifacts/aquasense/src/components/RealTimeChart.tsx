@@ -68,10 +68,10 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
     <div
       style={{
         background:   "var(--app-surface)",
-        border:       "1px solid var(--app-border)",
-        borderRadius: 10,
+        border:       "3px solid var(--app-border)",
+        borderRadius: 6,
         padding:      "10px 14px",
-        boxShadow:    "0 8px 24px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06)",
+        boxShadow:    "3px 3px 0px 0px var(--app-border)",
         minWidth:     160,
       }}
     >
@@ -82,6 +82,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
           color:        "var(--app-text-3)",
           marginBottom: 8,
           letterSpacing: "0.04em",
+          fontWeight:   700,
         }}
       >
         T-{(60 - Number(label)) * 5}s ago
@@ -105,15 +106,16 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
                   height:       8,
                   borderRadius: "50%",
                   background:   color,
+                  border:       "1.5px solid var(--app-border)",
                   flexShrink:   0,
                 }}
               />
               <span
                 style={{
                   fontSize:   11,
-                  color:      "var(--app-text-2)",
+                  color:      "var(--app-text-1)",
                   fontFamily: "var(--app-font-sans)",
-                  fontWeight: 500,
+                  fontWeight: 700,
                 }}
               >
                 {METRIC_LABELS[metric]}
@@ -123,7 +125,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
               style={{
                 fontSize:   11,
                 fontFamily: "DM Mono, monospace",
-                fontWeight: 500,
+                fontWeight: 700,
                 color:      "var(--app-text-1)",
               }}
             >
@@ -157,16 +159,14 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
   });
 
   // Subtle horizontal grid: adapt for dark / light
-  const gridColor = isDark ? "rgba(255,255,255,0.06)" : "#f1f5f9";
-  const tickColor = isDark ? "#475569" : "#94a3b8";
+  const gridColor = isDark ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.10)";
+  const tickColor = isDark ? "#e4e4e7" : "#0a0a0c";
 
   return (
     <div
-      className="rounded-xl border relative"
+      className="rounded-md border-[3px] border-black dark:border-white relative shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
       style={{
         background:   "var(--app-surface)",
-        borderColor:  "var(--app-border)",
-        boxShadow:    "0 1px 3px rgba(0,0,0,0.06)",
         opacity:      offline ? 0.55 : 1,
       }}
       data-testid="realtime-chart"
@@ -175,12 +175,12 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
       {/* Offline overlay */}
       {offline && (
         <div
-          className="absolute inset-0 flex items-center justify-center rounded-xl z-10"
+          className="absolute inset-0 flex items-center justify-center rounded-md z-10 border-[3px] border-black dark:border-white"
           style={{ background: "var(--app-surface)" }}
         >
           <div className="flex flex-col items-center gap-2" style={{ color: "var(--app-text-3)" }}>
             <WifiOff className="w-8 h-8" />
-            <span className="text-xs font-medium tracking-wide">Sensor Offline</span>
+            <span className="text-xs font-bold uppercase tracking-wider">Sensor Offline</span>
           </div>
         </div>
       )}
@@ -188,18 +188,18 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
       {/* ── Header ── */}
       <div
         className="flex flex-wrap items-center justify-between gap-3 px-5 pt-5 pb-4"
-        style={{ borderBottom: "1px solid var(--app-border)" }}
+        style={{ borderBottom: "3px solid var(--app-border)" }}
       >
         {/* Title */}
         <div>
           <h3
-            className="text-sm font-semibold"
+            className="text-sm font-extrabold uppercase tracking-wide"
             style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}
           >
             Live Sensor Readings
           </h3>
           <p
-            className="text-[11px] mt-0.5"
+            className="text-[11px] mt-0.5 font-bold"
             style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}
           >
             {history.pH.length} data points · 5s interval
@@ -214,11 +214,12 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
               <button
                 key={m}
                 onClick={() => toggleMetric(m)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all"
+                className="flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-extrabold uppercase border-2 transition-all hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_var(--app-border)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_var(--app-border)]"
                 style={{
-                  background: isOn ? METRIC_COLORS[m] : (isDark ? "rgba(255,255,255,0.07)" : "#f1f5f9"),
-                  color:      isOn ? "#ffffff"          : "var(--app-text-2)",
-                  border:     `1px solid ${isOn ? "transparent" : "var(--app-border)"}`,
+                  background: isOn ? METRIC_COLORS[m] : "var(--app-surface-2)",
+                  color:      isOn ? "#ffffff"        : "var(--app-text-1)",
+                  borderColor: "var(--app-border)",
+                  boxShadow: isOn ? "2px 2px 0px 0px var(--app-border)" : "1px 1px 0px 0px var(--app-border)",
                 }}
                 data-testid={`toggle-metric-${m.toLowerCase()}`}
               >
@@ -240,13 +241,14 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
             <CartesianGrid
               strokeDasharray="0"
               stroke={gridColor}
+              strokeWidth={1.5}
               vertical={false}
               horizontal={true}
             />
 
             <XAxis
               dataKey="t"
-              tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono" }}
+              tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono", fontWeight: 700 }}
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => {
@@ -264,11 +266,12 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
                 fill:      tickColor,
                 fontSize:  9,
                 fontFamily: "DM Mono",
+                fontWeight: 700,
               }}
             />
 
             <YAxis
-              tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono" }}
+              tick={{ fill: tickColor, fontSize: 10, fontFamily: "DM Mono", fontWeight: 700 }}
               tickLine={false}
               axisLine={false}
               width={36}
@@ -277,8 +280,8 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
             <Tooltip
               content={<CustomTooltip />}
               cursor={{
-                stroke:      isDark ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.06)",
-                strokeWidth: 1,
+                stroke:      isDark ? "rgba(255,255,255,0.2)" : "rgba(0,0,0,0.15)",
+                strokeWidth: 1.5,
                 strokeDasharray: "4 3",
               }}
             />
@@ -290,7 +293,7 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
                   type="monotone"
                   dataKey={m}
                   stroke={METRIC_COLORS[m]}
-                  strokeWidth={1.8}
+                  strokeWidth={2.5}
                   dot={false}
                   isAnimationActive={false}
                   name={METRIC_LABELS[m]}
@@ -306,23 +309,23 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
       {/* ── Legend strip ── */}
       <div
         className="flex flex-wrap gap-x-4 gap-y-1 px-5 pb-4"
-        style={{ borderTop: "1px solid var(--app-border-subtle)" }}
+        style={{ borderTop: "3px solid var(--app-border)" }}
       >
         {METRICS.filter((m) => visible[m]).map((m) => (
           <div key={m} className="flex items-center gap-1.5 pt-3">
-            <svg width="18" height="2" className="shrink-0">
-              <line x1="0" y1="1" x2="18" y2="1" stroke={METRIC_COLORS[m]} strokeWidth="2" strokeLinecap="round" />
+            <svg width="18" height="4" className="shrink-0">
+              <line x1="0" y1="2" x2="18" y2="2" stroke={METRIC_COLORS[m]} strokeWidth="3" strokeLinecap="round" />
             </svg>
             <span
               style={{
-                fontSize:   10,
-                color:      "var(--app-text-2)",
+                fontSize:   11,
+                color:      "var(--app-text-1)",
                 fontFamily: "var(--app-font-sans)",
-                fontWeight: 500,
+                fontWeight: 700,
               }}
             >
               {METRIC_LABELS[m]}
-              <span style={{ color: "var(--app-text-3)", marginLeft: 3 }}>
+              <span style={{ color: "var(--app-text-3)", marginLeft: 3, fontFamily: "var(--app-font-mono)" }}>
                 {METRIC_UNITS[m] || ""}
               </span>
             </span>

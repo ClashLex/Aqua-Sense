@@ -62,23 +62,23 @@ function SummaryChip({
 }: { icon: React.ElementType; label: string; count: number; color: string }) {
   return (
     <div
-      className="flex items-center gap-2.5 px-4 py-3 rounded-xl flex-1 min-w-[120px]"
+      className="flex items-center gap-2.5 px-4 py-3 rounded-md flex-1 min-w-[120px] border-[3px] border-black dark:border-white"
       style={{
-        background:  `${color}09`,
-        border:      `1px solid ${color}28`,
+        background:  "var(--app-surface)",
+        boxShadow:    `3px 3px 0px 0px ${color}`,
       }}
     >
       <div
-        className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-        style={{ background: `${color}15`, border: `1px solid ${color}28` }}
+        className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 border-2 border-black"
+        style={{ background: `${color}22` }}
       >
         <Icon className="w-4 h-4" style={{ color }} />
       </div>
       <div>
-        <p className="text-xl font-bold leading-none tabular-nums" style={{ color, fontFamily: "DM Mono, monospace" }}>
+        <p className="text-xl font-extrabold leading-none tabular-nums" style={{ color: "var(--app-text-1)", fontFamily: "DM Mono, monospace" }}>
           {count}
         </p>
-        <p className="text-[10px] font-semibold mt-0.5 uppercase tracking-wider" style={{ color: `${color}bb` }}>
+        <p className="text-[10px] font-extrabold mt-0.5 uppercase tracking-wider" style={{ color: "var(--app-text-3)" }}>
           {label}
         </p>
       </div>
@@ -93,15 +93,14 @@ function SectionHeader({
 }: { title: string; count: number; color?: string; action?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3">
-      <h2 className="text-sm font-bold" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
+      <h2 className="text-sm font-extrabold uppercase tracking-wide" style={{ color: "var(--app-text-1)", fontFamily: "var(--app-font-display)" }}>
         {title}
       </h2>
       <span
-        className="text-xs font-bold px-2 py-0.5 rounded-full tabular-nums"
+        className="text-xs font-extrabold px-2 py-0.5 rounded-md border-2 border-black dark:border-white tabular-nums"
         style={{
           color,
-          background: `${color}12`,
-          border:     `1px solid ${color}28`,
+          background: `${color}22`,
           fontFamily: "DM Mono, monospace",
         }}
       >
@@ -145,12 +144,11 @@ function AlertCard({
       animate={{ opacity: isDone ? 0.6 : 1, x: 0 }}
       exit={{ opacity: 0, height: 0, marginBottom: 0 }}
       transition={{ duration: 0.22 }}
-      className="rounded-xl border relative overflow-hidden"
+      className="rounded-md border-[3px] border-black dark:border-white relative overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
       style={{
         background:   "var(--app-surface)",
-        borderColor:  "var(--app-border)",
-        borderLeft:   `4px solid ${isDone ? "#94a3b8" : sev.bar}`,
-        boxShadow:    "0 1px 4px rgba(0,0,0,0.05)",
+        borderLeftWidth: 6,
+        borderLeftColor: isDone ? "var(--app-border)" : sev.bar,
       }}
       data-testid={`alert-card-${alert.id}`}
     >
@@ -160,16 +158,16 @@ function AlertCard({
           <div className="flex items-center gap-2.5">
             {/* Metric icon */}
             <div
-              className="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
-              style={{ background: `${mColor}12`, border: `1px solid ${mColor}24` }}
+              className="w-8 h-8 rounded-md flex items-center justify-center shrink-0 border-2 border-black"
+              style={{ background: `${mColor}22` }}
             >
               <MetIcon className="w-4 h-4" style={{ color: mColor }} />
             </div>
             <div>
-              <p className="text-sm font-semibold leading-tight" style={{ color: "var(--app-text-1)" }}>
+              <p className="text-sm font-extrabold uppercase leading-tight" style={{ color: "var(--app-text-1)" }}>
                 {METRIC_LABELS[alert.metric]}
               </p>
-              <p className="text-[11px] mt-0.5" style={{ color: "var(--app-text-3)" }}>
+              <p className="text-[11px] mt-0.5 font-bold" style={{ color: "var(--app-text-3)" }}>
                 {alert.sensor}
               </p>
             </div>
@@ -177,11 +175,10 @@ function AlertCard({
 
           {/* Severity badge — top right */}
           <span
-            className="text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0"
+            className="text-[10px] font-extrabold uppercase px-2.5 py-1 rounded-md shrink-0 border-2 border-black"
             style={{
               color:      isDone ? "#64748b" : sev.text,
-              background: isDone ? "rgba(100,116,139,0.09)" : sev.bg,
-              border:     `1px solid ${isDone ? "rgba(100,116,139,0.25)" : sev.border}`,
+              background: isDone ? "#f1f5f9" : sev.bg,
             }}
           >
             {isDone ? "RESOLVED" : alert.severity}
@@ -190,13 +187,13 @@ function AlertCard({
 
         {/* Value vs threshold row */}
         <div
-          className="flex items-center gap-3 px-3 py-2 rounded-lg mb-3"
-          style={{ background: isDone ? "rgba(100,116,139,0.06)" : `${sev.text}06`, border: `1px solid ${isDone ? "rgba(100,116,139,0.12)" : sev.border}` }}
+          className="flex items-center gap-3 px-3 py-2 rounded-md mb-3 border-2 border-black"
+          style={{ background: isDone ? "var(--app-surface-2)" : `${sev.text}11` }}
         >
           <div className="flex items-baseline gap-1">
-            <span className="text-[10px] font-medium" style={{ color: "var(--app-text-3)" }}>Reading</span>
+            <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--app-text-3)" }}>Reading</span>
             <span
-              className="text-sm font-bold tabular-nums"
+              className="text-sm font-black tabular-nums"
               style={{ color: isDone ? "#64748b" : sev.text, fontFamily: "DM Mono, monospace" }}
             >
               {alert.value.toFixed(alert.metric === "TDS" ? 0 : 2)}{METRIC_UNITS[alert.metric]}
@@ -205,9 +202,9 @@ function AlertCard({
           {limit && (
             <>
               <span style={{ color: "var(--app-border)", fontSize: 14 }}>·</span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-[10px] font-medium" style={{ color: "var(--app-text-3)" }}>Threshold</span>
-                <span className="text-[11px] font-semibold tabular-nums" style={{ color: "var(--app-text-2)", fontFamily: "DM Mono, monospace" }}>
+              <div className="flex items-baseline gap-1 font-bold">
+                <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--app-text-3)" }}>Threshold</span>
+                <span className="text-[11px] font-extrabold tabular-nums" style={{ color: "var(--app-text-2)", fontFamily: "DM Mono, monospace" }}>
                   {limit}
                 </span>
               </div>
@@ -217,8 +214,8 @@ function AlertCard({
 
         {/* Bottom row: time + acknowledge */}
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5" style={{ color: "var(--app-text-3)" }}>
-            <Clock className="w-3 h-3" />
+          <div className="flex items-center gap-1.5 font-bold" style={{ color: "var(--app-text-3)" }}>
+            <Clock className="w-3 h-3 text-black dark:text-white" />
             <span className="text-[11px]" style={{ fontFamily: "DM Mono, monospace" }}>
               {relativeTime(alert.timestamp)}
             </span>
@@ -231,19 +228,12 @@ function AlertCard({
           {!isDone && onAcknowledge ? (
             <button
               onClick={onAcknowledge}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border transition-all"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-extrabold uppercase border-[3px] border-black dark:border-white transition-all hover:-translate-x-[1px] hover:-translate-y-[1px] hover:shadow-[3px_3px_0px_0px_rgba(0,0,0,1)] active:translate-x-[1px] active:translate-y-[1px] active:shadow-[1px_1px_0px_0px_rgba(0,0,0,1)]"
               style={{
                 borderColor: "var(--app-border)",
-                color:       "var(--app-text-2)",
-                background:  "transparent",
-              }}
-              onMouseEnter={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "#16a34a";
-                (e.currentTarget as HTMLButtonElement).style.color       = "#16a34a";
-              }}
-              onMouseLeave={(e) => {
-                (e.currentTarget as HTMLButtonElement).style.borderColor = "var(--app-border)";
-                (e.currentTarget as HTMLButtonElement).style.color       = "var(--app-text-2)";
+                color:       "var(--app-text-1)",
+                background:  "var(--app-surface)",
+                boxShadow:   "2px 2px 0px 0px rgba(0,0,0,1)",
               }}
               data-testid={`acknowledge-alert-${alert.id}`}
             >
@@ -251,10 +241,10 @@ function AlertCard({
               Acknowledge
             </button>
           ) : isDone ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-semibold border"
-              style={{ borderColor: "rgba(100,116,139,0.20)", color: "#94a3b8", background: "rgba(100,116,139,0.06)" }}
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-extrabold border-2 border-black"
+              style={{ color: "#94a3b8", background: "var(--app-surface-2)" }}
             >
-              <CheckCircle2 className="w-3 h-3" />
+              <CheckCircle2 className="w-3 h-3 text-[#16a34a]" />
               Acknowledged
             </div>
           ) : null}
@@ -279,49 +269,49 @@ function RulesPanel() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }}
-            className="rounded-xl border p-4"
-            style={{ background: "var(--app-surface)", borderColor: "var(--app-border)", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}
+            className="rounded-md border-[3px] border-black dark:border-white p-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
+            style={{ background: "var(--app-surface)" }}
             data-testid={`rule-card-${metric.toLowerCase()}`}
           >
             <div className="flex items-center gap-2 mb-3">
-              <div className="w-7 h-7 rounded-lg flex items-center justify-center" style={{ background: `${color}12`, border: `1px solid ${color}24` }}>
+              <div className="w-7 h-7 rounded-md flex items-center justify-center border-2 border-black" style={{ background: `${color}22` }}>
                 <Icon className="w-3.5 h-3.5" style={{ color }} />
               </div>
-              <span className="text-sm font-semibold" style={{ color }}>
+              <span className="text-sm font-extrabold uppercase tracking-wide" style={{ color }}>
                 {METRIC_LABELS[metric]}
               </span>
-              <span className="text-[10px] ml-auto" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono" }}>
+              <span className="text-[10px] ml-auto font-bold" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono" }}>
                 {METRIC_UNITS[metric] || "unitless"}
               </span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 font-bold">
               {t.minDanger !== undefined && (
                 <div className="flex justify-between items-center">
-                  <span className="text-[11px]" style={{ color: "var(--app-text-2)" }}>Min Danger</span>
-                  <span className="text-[11px] font-bold" style={{ color: "#dc2626", fontFamily: "DM Mono" }}>&lt; {t.minDanger}</span>
+                  <span className="text-[11px] font-extrabold uppercase" style={{ color: "var(--app-text-2)" }}>Min Danger</span>
+                  <span className="text-[11px] font-extrabold" style={{ color: "#dc2626", fontFamily: "DM Mono" }}>&lt; {t.minDanger}</span>
                 </div>
               )}
               {t.minWarning !== undefined && (
                 <div className="flex justify-between items-center">
-                  <span className="text-[11px]" style={{ color: "var(--app-text-2)" }}>Min Warning</span>
-                  <span className="text-[11px] font-bold" style={{ color: "#d97706", fontFamily: "DM Mono" }}>&lt; {t.minWarning}</span>
+                  <span className="text-[11px] font-extrabold uppercase" style={{ color: "var(--app-text-2)" }}>Min Warning</span>
+                  <span className="text-[11px] font-extrabold" style={{ color: "#d97706", fontFamily: "DM Mono" }}>&lt; {t.minWarning}</span>
                 </div>
               )}
               {t.maxWarning !== undefined && (
                 <div className="flex justify-between items-center">
-                  <span className="text-[11px]" style={{ color: "var(--app-text-2)" }}>Max Warning</span>
-                  <span className="text-[11px] font-bold" style={{ color: "#d97706", fontFamily: "DM Mono" }}>&gt; {t.maxWarning}</span>
+                  <span className="text-[11px] font-extrabold uppercase" style={{ color: "var(--app-text-2)" }}>Max Warning</span>
+                  <span className="text-[11px] font-extrabold" style={{ color: "#d97706", fontFamily: "DM Mono" }}>&gt; {t.maxWarning}</span>
                 </div>
               )}
               {t.maxDanger !== undefined && (
                 <div className="flex justify-between items-center">
-                  <span className="text-[11px]" style={{ color: "var(--app-text-2)" }}>Max Danger</span>
-                  <span className="text-[11px] font-bold" style={{ color: "#dc2626", fontFamily: "DM Mono" }}>&gt; {t.maxDanger}</span>
+                  <span className="text-[11px] font-extrabold uppercase" style={{ color: "var(--app-text-2)" }}>Max Danger</span>
+                  <span className="text-[11px] font-extrabold" style={{ color: "#dc2626", fontFamily: "DM Mono" }}>&gt; {t.maxDanger}</span>
                 </div>
               )}
-              <div className="flex justify-between items-center pt-2" style={{ borderTop: "1px solid var(--app-border-subtle)" }}>
-                <span className="text-[10px]" style={{ color: "var(--app-text-3)" }}>Trigger after</span>
-                <span className="text-[10px] font-semibold" style={{ color: "#16a34a", fontFamily: "DM Mono" }}>3 consecutive readings</span>
+              <div className="flex justify-between items-center pt-2" style={{ borderTop: "3px solid var(--app-border)" }}>
+                <span className="text-[10px] font-extrabold uppercase" style={{ color: "var(--app-text-3)" }}>Trigger after</span>
+                <span className="text-[10px] font-extrabold" style={{ color: "#16a34a", fontFamily: "DM Mono" }}>3 consecutive readings</span>
               </div>
             </div>
           </motion.div>
@@ -363,7 +353,7 @@ export function Alerts() {
       </div>
 
       {/* ── Active Alerts section ─────────────────────────────────────────── */}
-      <div className="space-y-3">
+      <div className="space-y-4">
         <SectionHeader
           title="Active Alerts"
           count={active.length}
@@ -377,73 +367,67 @@ export function Alerts() {
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="rounded-xl border py-14 px-8 flex flex-col items-center gap-4"
+              className="rounded-md border-[3px] border-black dark:border-white py-14 px-8 flex flex-col items-center gap-4 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]"
               style={{
-                background:  isDark ? "rgba(22,163,74,0.06)" : "rgba(22,163,74,0.04)",
-                borderColor: "rgba(22,163,74,0.20)",
+                background:  "var(--app-surface)",
               }}
               data-testid="empty-active-alerts"
             >
               {/* Minimal illustration */}
               <div className="relative">
                 <div
-                  className="w-16 h-16 rounded-2xl flex items-center justify-center"
-                  style={{ background: "rgba(22,163,74,0.12)", border: "2px solid rgba(22,163,74,0.25)" }}
+                  className="w-16 h-16 rounded-md flex items-center justify-center border-2 border-black"
+                  style={{ background: "#dcfce7" }}
                 >
-                  <ShieldCheck className="w-8 h-8 text-[#16a34a]" strokeWidth={1.5} />
+                  <ShieldCheck className="w-8 h-8 text-[#16a34a]" strokeWidth={2} />
                 </div>
-                {/* Decorative rings */}
-                <div
-                  className="absolute -inset-2 rounded-2xl"
-                  style={{ border: "1px solid rgba(22,163,74,0.12)" }}
-                />
-                <div
-                  className="absolute -inset-4 rounded-3xl"
-                  style={{ border: "1px solid rgba(22,163,74,0.07)" }}
-                />
               </div>
-              <div className="text-center">
-                <p className="text-sm font-bold text-[#16a34a]">All clear — no active alerts</p>
+              <div className="text-center font-bold">
+                <p className="text-sm font-extrabold uppercase text-[#16a34a]">All clear — no active alerts</p>
                 <p className="text-xs mt-1.5" style={{ color: "var(--app-text-3)" }}>
                   All sensors are reading within safe thresholds
                 </p>
               </div>
             </motion.div>
           ) : (
-            active.map((alert, i) => (
-              <AlertCard
-                key={alert.id}
-                alert={alert}
-                onAcknowledge={() => handleAck(alert.id)}
-                acknowledged={localAcked.has(alert.id)}
-              />
-            ))
+            <div className="space-y-4">
+              {active.map((alert, i) => (
+                <AlertCard
+                  key={alert.id}
+                  alert={alert}
+                  onAcknowledge={() => handleAck(alert.id)}
+                  acknowledged={localAcked.has(alert.id)}
+                />
+              ))}
+            </div>
           )}
         </AnimatePresence>
       </div>
 
       {/* ── Resolved Today section ────────────────────────────────────────── */}
       {resolved.length > 0 && (
-        <div className="space-y-3">
+        <div className="space-y-4">
           <SectionHeader
             title="Resolved Today"
             count={resolved.length}
             color="#16a34a"
           />
-          <AnimatePresence>
-            {[...resolved].reverse().map((alert) => (
-              <AlertCard
-                key={alert.id}
-                alert={alert}
-                acknowledged={true}
-              />
-            ))}
-          </AnimatePresence>
+          <div className="space-y-4">
+            <AnimatePresence>
+              {[...resolved].reverse().map((alert) => (
+                <AlertCard
+                  key={alert.id}
+                  alert={alert}
+                  acknowledged={true}
+                />
+              ))}
+            </AnimatePresence>
+          </div>
         </div>
       )}
 
       {/* ── Alert Rules (collapsible) ─────────────────────────────────────── */}
-      <div className="rounded-xl border overflow-hidden" style={{ background: "var(--app-surface)", borderColor: "var(--app-border)" }}>
+      <div className="rounded-md border-[3px] border-black dark:border-white overflow-hidden shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,1)]" style={{ background: "var(--app-surface)" }}>
         <button
           onClick={() => setShowRules((v) => !v)}
           className="w-full flex items-center justify-between px-5 py-4 transition-colors"
@@ -451,20 +435,20 @@ export function Alerts() {
           data-testid="toggle-rules-btn"
         >
           <div className="flex items-center gap-2.5">
-            <div className="w-6 h-6 rounded-md flex items-center justify-center" style={{ background: "rgba(37,99,235,0.10)", border: "1px solid rgba(37,99,235,0.20)" }}>
+            <div className="w-6 h-6 rounded-md flex items-center justify-center border-2 border-black" style={{ background: "var(--app-primary-tint)" }}>
               <AlertTriangle className="w-3 h-3 text-[#2563eb]" />
             </div>
-            <span className="text-sm font-semibold" style={{ fontFamily: "var(--app-font-display)" }}>Detection Rules</span>
+            <span className="text-sm font-extrabold uppercase tracking-wide" style={{ fontFamily: "var(--app-font-display)" }}>Detection Rules</span>
             <span
-              className="text-[10px] font-bold px-2 py-0.5 rounded-full"
-              style={{ color: "#2563eb", background: "rgba(37,99,235,0.09)", border: "1px solid rgba(37,99,235,0.22)", fontFamily: "DM Mono" }}
+              className="text-[10px] font-extrabold px-2 py-0.5 rounded-md border-2 border-black"
+              style={{ color: "#2563eb", background: "var(--app-primary-tint)", fontFamily: "DM Mono" }}
             >
               {METRICS.length}
             </span>
           </div>
           {showRules
-            ? <ChevronUp   className="w-4 h-4" style={{ color: "var(--app-text-3)" }} />
-            : <ChevronDown className="w-4 h-4" style={{ color: "var(--app-text-3)" }} />
+            ? <ChevronUp   className="w-4 h-4" style={{ color: "var(--app-text-1)" }} />
+            : <ChevronDown className="w-4 h-4" style={{ color: "var(--app-text-1)" }} />
           }
         </button>
 
@@ -475,7 +459,7 @@ export function Alerts() {
               animate={{ height: "auto", opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
               transition={{ duration: 0.22, ease: "easeInOut" }}
-              style={{ overflow: "hidden", borderTop: "1px solid var(--app-border)" }}
+              style={{ overflow: "hidden", borderTop: "3px solid var(--app-border)" }}
             >
               <div className="p-5">
                 <RulesPanel />
