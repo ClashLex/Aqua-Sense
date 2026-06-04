@@ -1,0 +1,8 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "aquasense",
+  "compatibility_date": "2026-06-04",
+  "assets": {
+    "directory": "./artifacts/aquasense/dist/public"
+  }
+}
