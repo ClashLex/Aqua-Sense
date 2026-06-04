@@ -1,0 +1,16 @@
+{
+  "name": "aquasense",
+  "version": "1.0.0",
+  "license": "MIT",
+  "scripts": {
+    "dev": "pnpm --filter aquasense run dev",
+    "build": "pnpm --filter aquasense run build",
+    "preview": "pnpm --filter aquasense run preview",
+    "typecheck": "pnpm --filter aquasense run typecheck"
+  },
+  "private": true,
+  "devDependencies": {
+    "typescript": "~5.9.2",
+    "prettier": "^3.8.1"
+  }
+}
