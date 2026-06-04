@@ -7,7 +7,8 @@
     "dev": "pnpm --filter aquasense run dev",
     "build": "pnpm --filter aquasense run build",
     "preview": "pnpm --filter aquasense run preview",
-    "typecheck": "pnpm --filter aquasense run typecheck"
+    "typecheck": "pnpm --filter aquasense run typecheck",
+    "deploy": "pnpm build && npx wrangler deploy --secrets-file artifacts/aquasense/.env"
   },
   "private": true,
   "devDependencies": {
