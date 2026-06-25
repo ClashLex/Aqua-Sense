@@ -207,7 +207,7 @@ function advanceOffline(offline: OfflineState): void {
       if (Math.random() < 0.28) {
         const idx = Math.floor(Math.random() * SENSORS.length);
         offline.sensor = SENSORS[idx];
-        offline.ticksLeft = 6; // 30 seconds at 5s per tick
+        offline.ticksLeft = 10; // 30 seconds at 3s per tick
       }
     }
   }
@@ -421,7 +421,7 @@ export function SensorDataProvider({ children }: { children: React.ReactNode }) 
   }, []);
 
   useEffect(() => {
-    const id = setInterval(tick, 5000);
+    const id = setInterval(tick, 3000);
     return () => clearInterval(id);
   }, [tick]);
 

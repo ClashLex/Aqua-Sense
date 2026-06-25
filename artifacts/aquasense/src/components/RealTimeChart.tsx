@@ -85,7 +85,7 @@ function CustomTooltip({ active, payload, label }: TooltipProps<number, string>)
           fontWeight:   700,
         }}
       >
-        T-{(60 - Number(label)) * 5}s ago
+        T-{(60 - Number(label)) * 3}s ago
       </p>
       {payload.map((entry) => {
         const metric = entry.dataKey as MetricType;
@@ -202,7 +202,7 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
             className="text-[11px] mt-0.5 font-bold"
             style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}
           >
-            {history.pH.length} data points · 5s interval
+            {history.pH.length} data points · 3s interval
           </p>
         </div>
 
@@ -252,9 +252,9 @@ export function RealTimeChart({ history, offline = false }: RealTimeChartProps) 
               tickLine={false}
               axisLine={false}
               tickFormatter={(v) => {
-                const secsAgo = (60 - Number(v)) * 5;
+                const secsAgo = (60 - Number(v)) * 3;
                 if (secsAgo === 0)   return "now";
-                if (secsAgo === 300) return "-5m";
+                if (secsAgo === 180) return "-3m";
                 if (secsAgo % 60 === 0) return `-${secsAgo / 60}m`;
                 return "";
               }}

@@ -193,7 +193,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
       }}
     >
       <p style={{ fontSize: 10, fontFamily: "DM Mono", fontWeight: 700, color: "var(--app-text-3)", marginBottom: 8 }}>
-        T-{(60 - Number(label)) * 5}s ago
+        T-{(60 - Number(label)) * 3}s ago
       </p>
       {visible.map((entry) => {
         const m = entry.dataKey as MetricType;
@@ -355,7 +355,7 @@ export function Analytics() {
                 Sensor Trends
               </h2>
               <p className="text-[11px] mt-0.5 font-bold" style={{ color: "var(--app-text-3)", fontFamily: "DM Mono, monospace" }}>
-                {sensor} · {hist.pH.length} pts · 5s interval
+                {sensor} · {hist.pH.length} pts · 3s interval
               </p>
             </div>
 
@@ -425,10 +425,10 @@ export function Analytics() {
                   tickLine={false}
                   axisLine={false}
                   tickFormatter={(v) => {
-                    const ago = (60 - Number(v)) * 5;
+                    const ago = (60 - Number(v)) * 3;
                     if (Number(v) >= actualLen) return "";
                     if (ago === 0)   return "now";
-                    if (ago === 300) return "-5m";
+                    if (ago === 180) return "-3m";
                     if (ago % 60 === 0) return `-${ago / 60}m`;
                     return "";
                   }}
