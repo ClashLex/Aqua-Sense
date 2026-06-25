@@ -312,7 +312,7 @@ function NetworkTab() {
             <Code>{`// config.h
 #define WIFI_SSID     "YourNetworkName"
 #define WIFI_PASS     "YourPassword"
-#define API_HOST      "your-aquasense-domain.replit.app"
+#define API_HOST      "your-aquasense-domain.com"
 #define API_PATH      "/api/readings"
 #define SENSOR_ID     "River Station A"
 #define POST_INTERVAL 5000   // ms between readings`}</Code>
@@ -382,7 +382,7 @@ void publishReading(float ph, float turb, float temp,
         <h3 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Python (Raspberry Pi)</h3>
         <Code>{`import requests, json, time
 
-API_URL = "https://your-aquasense-domain.replit.app/api/readings"
+API_URL = "https://your-aquasense-domain.com/api/readings"
 
 def post_reading(ph, turbidity, temperature, do_val, tds):
     payload = {
@@ -410,7 +410,7 @@ while True:
       </div>
 
       <InfoBox variant="info">
-        If your AquaSense instance is running on Replit, use the <code className="text-[#2563eb]" style={{ fontFamily: "var(--app-font-mono)" }}>.replit.app</code> domain shown in the deployment URL. For local development, use your local IP address and port.
+        Replace <code className="text-[#2563eb]" style={{ fontFamily: "var(--app-font-mono)" }}>your-aquasense-domain.com</code> with your actual live domain (like Cloudflare, Vercel, etc.). For local development, use your computer's local network IP address (e.g., <code className="text-[#2563eb]" style={{ fontFamily: "var(--app-font-mono)" }}>192.168.1.50:5173</code>).
       </InfoBox>
     </div>
   );
@@ -603,7 +603,7 @@ function ApiTab() {
 
       <div>
         <h3 className="text-xs font-black uppercase tracking-wider mb-2" style={{ color: "var(--app-text-1)" }}>Test with cURL</h3>
-        <Code>{`curl -X POST https://your-app.replit.app/api/readings \\
+        <Code>{`curl -X POST https://your-aquasense-domain.com/api/readings \\
   -H "Content-Type: application/json" \\
   -d '{
     "sensor": "River Station A",
@@ -658,7 +658,7 @@ function TroubleshootingTab() {
     {
       problem: "API POST returns 401 or connection refused",
       cause: "The API endpoint URL is incorrect or your AquaSense instance is not running.",
-      fix: "Verify the domain in your browser first. Check that the Replit deployment is running. Ensure HTTPS is used, not HTTP.",
+      fix: "Verify the domain in your browser first. Check that your AquaSense dashboard is running and accessible over the network. Ensure HTTPS is used for live domains.",
     },
   ];
 

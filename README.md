@@ -4,7 +4,7 @@ Smart Water Quality Monitoring Platform<br><br>
 v1 - https://github.com/ClashLex/Aqua-Sense
 ## Overview
 
-AquaSense is a real-time smart water quality monitoring platform that uses IoT sensor simulation, AI-powered anomaly detection, and predictive analytics to monitor, detect anomalies, and predict unsafe water conditions. Includes an AI chatbot powered by free llm model APIs (DeepSeek, Qwen, gemini).[assistant currently inactive]
+AquaSense is a real-time smart water quality monitoring platform that uses IoT sensor simulation, AI-powered anomaly detection, and predictive analytics to monitor, detect anomalies, and predict unsafe water conditions. Includes an AI chatbot powered by free models via OpenRouter.
 
 ## Features
 
@@ -77,7 +77,7 @@ The app opens at `http://localhost:5173`.
    ```
 4. Restart the dev server
 
-See `api.md` for full provider setup details (DeepSeek, Qwen, others).
+See `api.md` for full setup details.
 
 ### Build for Production
 
@@ -112,7 +112,7 @@ Aqua-Sense-main/
 
 ## Documentation
 
-- **[api.md](api.md)** — How to connect a free AI API (OpenRouter, DeepSeek, Qwen)
+- **[api.md](api.md)** — How to connect a free AI API via OpenRouter
 - **[walkthrough.md](walkthrough.md)** — Deploy to Vercel, Netlify, Cloudflare, Docker, or self-host
 
 ## License

@@ -43,8 +43,6 @@ export function getAIModel(): string {
 
 export function getAIProvider(): string {
   if (API_BASE.includes("openrouter")) return "OpenRouter";
-  if (API_BASE.includes("deepseek")) return "DeepSeek";
-  if (API_BASE.includes("dashscope") || API_BASE.includes("aliyun")) return "Qwen";
   return "Custom";
 }
 
