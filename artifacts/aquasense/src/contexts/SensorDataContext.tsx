@@ -104,6 +104,7 @@ interface PhysicsState {
   rain: RainEvent;
   offline: OfflineState;
   consecutiveCounts: Record<string, number>;
+  realReadings: Record<string, { timestamp: number; data: Record<string, number> }>;
 }
 
 function getBaseline(sensor: SensorName, metric: MetricType): number {
@@ -133,6 +134,7 @@ function initPhysics(): PhysicsState {
     rain: { phase: "idle", bonus: 0, peakBonus: 0, ticksLeft: 0, nextIn: 20 + Math.floor(Math.random() * 20) },
     offline: { sensor: null, ticksLeft: 0, nextCheckIn: 60 + Math.floor(Math.random() * 30) },
     consecutiveCounts: {},
+    realReadings: {},
   };
 }
 
@@ -217,6 +219,22 @@ function updateSensorPhysics(phys: PhysicsState, s: SensorName): void {
   if (phys.offline.sensor === s) return; // don't update offline sensor
 
   const v = phys.values[s];
+  
+  // ── Real Data Override ───────────────────────────────────────────────────
+  const real = phys.realReadings[s];
+  if (real && Date.now() - real.timestamp < 15000) {
+    v.pH = real.data.pH ?? v.pH;
+    v.Turbidity = real.data.turbidity ?? v.Turbidity;
+    v.Temperature = real.data.temperature ?? v.Temperature;
+    v.DO = real.data.do ?? v.DO;
+    v.TDS = real.data.tds ?? v.TDS;
+    
+    phys.acidSpike[s].active = false;
+    phys.acidSpike[s].recovering = false;
+    phys.pHVel[s] = 0;
+    return;
+  }
+
   const drift = BASELINE[s];
 
   // ── pH: velocity-based slow drift ──────────────────────────────────────
@@ -424,6 +442,39 @@ export function SensorDataProvider({ children }: { children: React.ReactNode }) 
     const id = setInterval(tick, 3000);
     return () => clearInterval(id);
   }, [tick]);
+
+  useEffect(() => {
+    const fetchRealData = async () => {
+      try {
+        const res = await fetch("/api/readings");
+        if (!res.ok) return;
+        const data = await res.json() as any[];
+        
+        const now = Date.now();
+        for (const item of data) {
+          if (item.sensor && SENSORS.includes(item.sensor as any)) {
+            const existing = physRef.current.realReadings[item.sensor];
+            const itemTs = item.received_at ? new Date(item.received_at).getTime() : now;
+            
+            // Only update if we haven't seen this reading before
+            if (!existing || itemTs > existing.data._ts) {
+              item._ts = itemTs;
+              physRef.current.realReadings[item.sensor] = {
+                timestamp: now, // Local time when received (used for the 15s expiration)
+                data: item
+              };
+            }
+          }
+        }
+      } catch (e) {
+        // fail silently if no API
+      }
+    };
+    
+    fetchRealData();
+    const id = setInterval(fetchRealData, 3000);
+    return () => clearInterval(id);
+  }, []);
 
   const acknowledgeAnomaly = useCallback((id: string) => {
     setState((prev) => ({

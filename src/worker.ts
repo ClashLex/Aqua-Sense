@@ -8,9 +8,48 @@ export interface Env {
   };
 }
 
+// Global in-memory state to hold latest sensor readings.
+// Note: This is per-isolate in Cloudflare Workers and may be cleared periodically,
+// but it is sufficient for the demo/prototype.
+const latestReadings = new Map<string, any>();
+
 export default {
   async fetch(request: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
     const url = new URL(request.url);
+
+    // API Readings proxy
+    if (url.pathname === "/api/readings") {
+      const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+      };
+
+      if (request.method === "OPTIONS") {
+        return new Response(null, { headers: corsHeaders });
+      }
+
+      if (request.method === "POST") {
+        try {
+          const body = await request.json() as any;
+          if (!body.sensor) {
+            return new Response(JSON.stringify({ error: "Missing required field: sensor" }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+          }
+          body.received_at = new Date().toISOString();
+          latestReadings.set(body.sensor, body);
+          return new Response(JSON.stringify({ status: "ingested", sensor: body.sensor }), { status: 201, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        } catch (e: any) {
+          return new Response(JSON.stringify({ error: e.message }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        }
+      }
+
+      if (request.method === "GET") {
+        const readings = Array.from(latestReadings.values());
+        return new Response(JSON.stringify(readings), { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+
+      return new Response("Method Not Allowed", { status: 405, headers: corsHeaders });
+    }
 
     // Proxy the chat API request
     if (url.pathname === "/api/chat") {

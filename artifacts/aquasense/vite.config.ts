@@ -11,10 +11,62 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
       {
-        name: "api-chat-proxy",
+        name: "api-proxy",
         configureServer(server) {
+          const localReadings = new Map<string, any>();
+
           server.middlewares.use(async (req, res, next) => {
-            if (req.url && new URL(req.url, "http://localhost").pathname === "/api/chat") {
+            const url = new URL(req.url || "/", "http://localhost");
+
+            if (url.pathname === "/api/readings") {
+              const corsHeaders = {
+                "Access-Control-Allow-Origin": "*",
+                "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+                "Access-Control-Allow-Headers": "Content-Type",
+              };
+
+              if (req.method === "OPTIONS") {
+                res.writeHead(204, corsHeaders);
+                res.end();
+                return;
+              }
+
+              if (req.method === "POST") {
+                let bodyStr = "";
+                req.on("data", (chunk) => { bodyStr += chunk; });
+                req.on("end", () => {
+                  try {
+                    const body = JSON.parse(bodyStr);
+                    if (!body.sensor) {
+                      res.writeHead(422, { ...corsHeaders, "Content-Type": "application/json" });
+                      res.end(JSON.stringify({ error: "Missing required field: sensor" }));
+                      return;
+                    }
+                    body.received_at = new Date().toISOString();
+                    localReadings.set(body.sensor, body);
+                    res.writeHead(201, { ...corsHeaders, "Content-Type": "application/json" });
+                    res.end(JSON.stringify({ status: "ingested", sensor: body.sensor }));
+                  } catch (e: any) {
+                    res.writeHead(400, { ...corsHeaders, "Content-Type": "application/json" });
+                    res.end(JSON.stringify({ error: e.message }));
+                  }
+                });
+                return;
+              }
+
+              if (req.method === "GET") {
+                const readings = Array.from(localReadings.values());
+                res.writeHead(200, { ...corsHeaders, "Content-Type": "application/json" });
+                res.end(JSON.stringify(readings));
+                return;
+              }
+
+              res.writeHead(405, corsHeaders);
+              res.end("Method Not Allowed");
+              return;
+            }
+
+            if (url.pathname === "/api/chat") {
               if (req.method !== "POST") {
                 res.statusCode = 405;
                 res.end("Method Not Allowed");
