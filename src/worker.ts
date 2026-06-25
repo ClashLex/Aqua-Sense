@@ -8,6 +8,11 @@ export interface Env {
   };
 }
 
+export interface ExecutionContext {
+  waitUntil(promise: Promise<any>): void;
+  passThroughOnException(): void;
+}
+
 // Global in-memory state to hold latest sensor readings.
 // Note: This is per-isolate in Cloudflare Workers and may be cleared periodically,
 // but it is sufficient for the demo/prototype.
